@@ -47,12 +47,53 @@ export async function onRequest(context) {
     else if (contentType.includes('multipart/form-data')) {
       // multipart/form-data 요청 처리
       try {
-        // 일단 요청을 텍스트로 가져와서 역직렬화한 후
-        // URLSearchParams로 처리 (단순한 방법)
+        // formData 가져오기
         const formData = await context.request.formData();
-        imageBase64 = formData.get('imageBase64');
-        nameLanguage = formData.get('nameLanguage');
-        uiLanguage = formData.get('uiLanguage');
+        
+        // 디버깅을 위해 모든 필드 출력
+        console.log('FormData fields:');
+        for (const [key, value] of formData.entries()) {
+          console.log(`- ${key}: ${typeof value === 'object' ? '[Object data]' : value.substring(0, 30) + '...'}`);
+        }
+        
+        // 여러 가능한 필드 이름 확인
+        // 이미지 데이터 찾기
+        if (formData.has('image')) {
+          const file = formData.get('image');
+          // File 이나 Blob을 base64로 변환
+          if (file && (file instanceof File || file instanceof Blob)) {
+            const arrayBuffer = await file.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+            imageBase64 = btoa(binary);
+            console.log('Image data converted from file, length:', imageBase64?.length || 0);
+          }
+        } 
+        else if (formData.has('imageBase64')) {
+          imageBase64 = formData.get('imageBase64');
+          console.log('Found imageBase64 field, length:', imageBase64?.length || 0);
+        }
+        
+        // 다른 이름으로 이미지 데이터 찾아보기
+        if (!imageBase64) {
+          for (const [key, value] of formData.entries()) {
+            if (key.toLowerCase().includes('image') && typeof value === 'string' && value.length > 100) {
+              imageBase64 = value;
+              console.log(`Using field '${key}' as image data, length:`, imageBase64.length);
+              break;
+            }
+          }
+        }
+        
+        // 언어 설정 찾기
+        nameLanguage = formData.get('nameLanguage') || formData.get('language') || 'english';
+        uiLanguage = formData.get('uiLanguage') || formData.get('ui') || 'en';
+        
+        console.log('Extracted data:', { 
+          hasImageData: !!imageBase64, 
+          nameLanguage,
+          uiLanguage
+        });
       } catch (error) {
         console.error('Error parsing form data:', error);
         return Response.json(
