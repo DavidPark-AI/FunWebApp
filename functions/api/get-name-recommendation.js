@@ -334,46 +334,46 @@ function getBasePrompt(uiLanguage) {
   const randomSeed = Math.floor(Math.random() * 1000000);
   
   const basePrompts = {
-    en: `You are an advanced name recommendation system that analyzes appearance and suggests creative, fitting names. Follow this exact process:
+    en: `You are an advanced name recommendation system that suggests creative, fitting names based on images. Follow this exact process:
 
-1. FIRST, analyze the photo carefully and note: approximate age, perceived gender, facial features, expression, clothing style, hair style, and any distinctive characteristics.
+1. FIRST, get a general impression from the image - focus on the overall mood, colors, setting, and feeling rather than detailed facial analysis.
 
-2. SECOND, based on your analysis, create a LIST OF 10 UNIQUE AND DIVERSE name suggestions that would suit this person. Include unusual/creative names, not just common ones.
+2. SECOND, based on your impression, create a LIST OF 10 UNIQUE AND DIVERSE name suggestions that would match the image's feeling. Include unusual/creative names, not just common ones.
 
 3. THIRD, randomly select ONE name from your list of 10.
 
 4. FINALLY, respond ONLY with:
 Name: [your selected name]
 Pronunciation: [how to pronounce it]
-Reason: [brief explanation why this name fits the person]
+Reason: [brief explanation why this name matches the image]
 
 Session ID: ${currentTime}-${randomSeed}. Use this to ensure results are different each time.`,
-    ko: `당신은 외모를 분석하고 창의적이고 어울리는 이름을 추천하는 고급 이름 추천 시스템입니다. 다음 절차를 정확히 따르세요:
+    ko: `당신은 이미지를 보고 창의적이고 어울리는 이름을 추천하는 고급 이름 추천 시스템입니다. 다음 절차를 정확히 따르세요:
 
-1. 먼저, 사진을 자세히 분석하고 다음을 기록하세요: 대략적인 나이, 인식된 성별, 얼굴 특징, 표정, 의상 스타일, 헤어 스타일 및 기타 특징적인 특성.
+1. 먼저, 이미지에서 전반적인 인상을 받으세요 - 세부적인 얼굴 분석보다는 전체적인 분위기, 색감, 배경, 느낌에 집중하세요.
 
-2. 두번째, 분석을 기반으로 이 사람에게 어울릴 10가지 독특하고 다양한 이름 제안 목록을 작성하세요. 흔한 이름뿐만 아니라 특이하고 창의적인 이름도 포함하세요.
+2. 두번째, 이 인상을 기반으로 이미지의 느낌에 맞는 10가지 독특하고 다양한 이름 제안 목록을 작성하세요. 흔한 이름뿐만 아니라 특이하고 창의적인 이름도 포함하세요.
 
 3. 세번째, 10개 목록에서 무작위로 하나의 이름을 선택하세요.
 
 4. 마지막으로, 다음 형식으로만 응답하세요:
 Name: [선택한 이름]
 Pronunciation: [발음 방법]
-Reason: [이 이름이 그 사람에게 맞는 간략한 설명]
+Reason: [이 이름이 이미지의 느낌과 어울리는 간략한 설명]
 
 세션 ID: ${currentTime}-${randomSeed}. 매번 다른 결과를 보장하기 위해 이 ID를 활용하세요.`,
-    ja: `あなたは、外見を分析し、創造的で適切な名前を提案する先進的な名前推薦システムです。次の手順に正確に従ってください：
+    ja: `あなたは、画像に基づいて創造的で適切な名前を提案する先進的な名前推薦システムです。次の手順に正確に従ってください：
 
-1. まず、写真を注意深く分析し、次の点に注目してください：おおよその年齢、認識された性別、顔の特徴、表情、服装スタイル、髪型、およびその他の特徴的な特性。
+1. まず、画像から全体的な印象を得てください - 詳細な顔の分析よりも、全体的な雰囲気、色彩、背景、感覚に焦点を当ててください。
 
-2. 次に、あなたの分析に基づいて、この人に合う10のユニークで多様な名前の候補リストを作成してください。一般的な名前だけでなく、珍しい/創造的な名前も含めてください。
+2. 次に、あなたの印象に基づいて、この画像の雰囲気に合う10のユニークで多様な名前の候補リストを作成してください。一般的な名前だけでなく、珍しい/創造的な名前も含めてください。
 
 3. 第三に、あなたの10の名前リストからランダムに1つの名前を選択してください。
 
 4. 最後に、次の形式でのみ回答してください：
 Name: [選択した名前]
 Pronunciation: [発音方法]
-Reason: [この名前がその人に合う簡単な理由]
+Reason: [この名前が画像の雰囲気に合う簡単な理由]
 
 セッションID：${currentTime}-${randomSeed}。これを使用して、毎回異なる結果を確実にしてください。`
   };
