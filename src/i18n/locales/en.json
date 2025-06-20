@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "Name Recommender",
+    "subtitle": "Get name recommendations based on your photo",
+    "uploadTitle": "Upload your photo",
+    "uploadInstructions": "Drag & drop your photo or click to upload (max 5MB)",
+    "languageSelect": "Select name language",
+    "korean": "Korean",
+    "english": "English",
+    "japanese": "Japanese",
+    "analyze": "Analyze Photo",
+    "analyzing": "Analyzing...",
+    "results": {
+      "title": "Your Recommended Name",
+      "pronunciation": "Pronunciation",
+      "reason": "Reason",
+      "saveImage": "Save as Image",
+      "share": "Share Result",
+      "tryAgain": "Try Another Photo"
+    },
+    "shareApp": "Share this app with friends",
+    "languageSettings": "Language Settings"
+  }
+}

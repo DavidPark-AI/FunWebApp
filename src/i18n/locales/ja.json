@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "名前レコメンダー",
+    "subtitle": "あなたの写真に基づいて名前を推薦します",
+    "uploadTitle": "写真をアップロード",
+    "uploadInstructions": "写真をドラッグ＆ドロップするか、クリックしてアップロードしてください（最大5MB）",
+    "languageSelect": "名前の言語を選択",
+    "korean": "韓国語",
+    "english": "英語",
+    "japanese": "日本語",
+    "analyze": "写真を分析",
+    "analyzing": "分析中...",
+    "results": {
+      "title": "おすすめの名前",
+      "pronunciation": "発音",
+      "reason": "おすすめの理由",
+      "saveImage": "画像として保存",
+      "share": "結果をシェア",
+      "tryAgain": "別の写真を試す"
+    },
+    "shareApp": "このアプリを友達と共有",
+    "languageSettings": "言語設定"
+  }
+}
