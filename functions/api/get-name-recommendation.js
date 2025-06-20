@@ -23,8 +23,52 @@ export async function onRequest(context) {
     }
 
     // 요청 데이터 가져오기
-    const body = await context.request.json();
-    const { imageBase64, nameLanguage, uiLanguage } = body;
+    let imageBase64, nameLanguage, uiLanguage;
+    
+    // Content-Type 헤더 확인
+    const contentType = context.request.headers.get('content-type') || '';
+    console.log('Request content type:', contentType);
+    
+    if (contentType.includes('application/json')) {
+      // JSON 요청 처리
+      try {
+        const body = await context.request.json();
+        imageBase64 = body.imageBase64;
+        nameLanguage = body.nameLanguage;
+        uiLanguage = body.uiLanguage;
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        return Response.json(
+          { error: `Failed to parse JSON request: ${error.message}` },
+          { headers, status: 400 }
+        );
+      }
+    } 
+    else if (contentType.includes('multipart/form-data')) {
+      // multipart/form-data 요청 처리
+      try {
+        // 일단 요청을 텍스트로 가져와서 역직렬화한 후
+        // URLSearchParams로 처리 (단순한 방법)
+        const formData = await context.request.formData();
+        imageBase64 = formData.get('imageBase64');
+        nameLanguage = formData.get('nameLanguage');
+        uiLanguage = formData.get('uiLanguage');
+      } catch (error) {
+        console.error('Error parsing form data:', error);
+        return Response.json(
+          { error: `Failed to parse form data: ${error.message}` },
+          { headers, status: 400 }
+        );
+      }
+    }
+    else {
+      // 지원되지 않는 Content-Type
+      console.error('Unsupported content type:', contentType);
+      return Response.json(
+        { error: `Unsupported content type: ${contentType}` },
+        { headers, status: 415 }
+      );
+    }
 
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "Image data is required" }), {
