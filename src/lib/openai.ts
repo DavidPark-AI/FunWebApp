@@ -84,18 +84,52 @@ export async function getNameSuggestion(
     }
 
     const responseText = response.choices[0]?.message?.content || '';
+    console.log('OpenAI raw response:', responseText); // 디버깅용 로그 추가
     
-    // Parse response - expect format: Name: [name]\nPronunciation (if needed): [pronunciation]\nReason: [reason]
-    const nameMatch = responseText.match(/Name: (.+?)(?:\n|$)/);
-    const pronunciationMatch = responseText.match(/Pronunciation: (.+?)(?:\n|$)/);
-    const reasonMatch = responseText.match(/Reason: (.+?)(?:\n|$|\.)/s);
-
+    // 견고한 파싱을 위해 정규식 대신 더 안전한 방식 사용
+    let name = 'Unknown';
+    let pronunciation = undefined;
+    let reason = 'Based on your appearance and features.';
+    
+    // 줄 단위로 분석
+    const lines = responseText.split('\n').map(line => line.trim());
+    
+    for (const line of lines) {
+      // Name 부분 찾기
+      if (line.toLowerCase().startsWith('name:')) {
+        const namePart = line.substring('name:'.length).trim();
+        if (namePart) name = namePart;
+        continue;
+      }
+      
+      // Pronunciation 부분 찾기
+      if (line.toLowerCase().startsWith('pronunciation:')) {
+        const pronPart = line.substring('pronunciation:'.length).trim();
+        if (pronPart) pronunciation = pronPart;
+        continue;
+      }
+      
+      // Reason 부분 찾기 (여러 줄일 수 있음)
+      if (line.toLowerCase().startsWith('reason:')) {
+        reason = line.substring('reason:'.length).trim();
+        // 추가 reason 줄 검사 (다음 줄들이 다른 키워드로 시작하지 않으면 reason의 일부로 간주)
+        let i = lines.indexOf(line) + 1;
+        while (i < lines.length) {
+          const nextLine = lines[i].trim();
+          if (nextLine && !nextLine.toLowerCase().includes(':')) {
+            reason += ' ' + nextLine;
+          } else {
+            break;
+          }
+          i++;
+        }
+      }
+    }
+    
     return {
-      name: nameMatch?.[1] || 'Unknown',
-      pronunciation: shouldShowPronunciation(nameLanguage, uiLanguage) ? 
-                     pronunciationMatch?.[1] || undefined : 
-                     undefined,
-      reason: reasonMatch?.[1] || 'Based on your appearance and features.',
+      name,
+      pronunciation: shouldShowPronunciation(nameLanguage, uiLanguage) ? pronunciation : undefined,
+      reason,
     };
   } catch (error) {
     console.error('OpenAI API error:', error);
