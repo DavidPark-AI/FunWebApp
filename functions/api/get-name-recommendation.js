@@ -322,28 +322,49 @@ export async function onRequest(context) {
     // 응답 객체를 로그로 기록하여 클라이언트에 보내지는 데이터 확인
     console.log('Sending response object to client:', JSON.stringify(responseObj));
     
-    // Cloudflare Worker에서는 Response.json()을 사용하여 Content-Type이 자동으로 설정되고 JSON 직렬화를 보장
-    return Response.json(responseObj, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    });
+    // 확장된 헤더 설정으로 캐시 및 CORS 문제 해결
+    const headers = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    };
+    
+    // Cloudflare Worker에서는 Response.json()을 사용하여 Content-Type 및 직렬화를 자동으로 처리
+    return Response.json(responseObj, { headers });
 
   } catch (error) {
     console.error('Error processing request:', error);
-    // 오류 응답도 Response.json() 사용
+    const errorMessage = error.message || 'Unknown error';
+    
+    // 오류 상황 자세히 로그
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // 동일한 헤더 설정 사용
+    const headers = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    };
+    
+    // Response.json() 사용하여 JSON 직렬화 및 Content-Type 헤더 가장 기본적인 방식으로 처리
     return Response.json(
-      { error: `Internal server error: ${error.message || 'Unknown error'}` },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
-        },
-        status: 500
-      }
+      { 
+        error: `Internal server error: ${errorMessage}`,
+        timestamp: new Date().toISOString()
+      },
+      { headers, status: 500 }
     );
   }
 }
