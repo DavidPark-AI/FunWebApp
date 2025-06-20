@@ -256,33 +256,50 @@ export async function onRequest(context) {
     let pronunciation = undefined;
     let reason = 'Based on your appearance and features.';
     
+    // 줄 단위로 분리
     const lines = responseText.split('\n').map(line => line.trim());
+    console.log('Parsed lines:', lines);
     
-    for (const line of lines) {
+    // 더 강화된 파싱 로직
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      console.log(`Processing line ${i}:`, line);
+      
+      // 이름 추출: "Name:"으로 시작하는 줄
       if (line.toLowerCase().startsWith('name:')) {
         const namePart = line.substring('name:'.length).trim();
-        if (namePart) name = namePart;
+        if (namePart) {
+          name = namePart;
+          console.log('Found name:', name);
+        }
         continue;
       }
       
+      // 발음 추출: "Pronunciation:"으로 시작하는 줄
       if (line.toLowerCase().startsWith('pronunciation:')) {
         const pronPart = line.substring('pronunciation:'.length).trim();
-        if (pronPart) pronunciation = pronPart;
+        if (pronPart) {
+          pronunciation = pronPart;
+          console.log('Found pronunciation:', pronunciation);
+        }
         continue;
       }
       
+      // 이유 추출: "Reason:"으로 시작하는 줄과 그 이후 연속된 텍스트
       if (line.toLowerCase().startsWith('reason:')) {
         reason = line.substring('reason:'.length).trim();
-        let i = lines.indexOf(line) + 1;
-        while (i < lines.length) {
-          const nextLine = lines[i].trim();
+        let j = i + 1;
+        while (j < lines.length) {
+          const nextLine = lines[j].trim();
+          // 다음 줄이 비어있지 않고, 콜론을 포함하지 않으면 reason에 추가
           if (nextLine && !nextLine.toLowerCase().includes(':')) {
             reason += ' ' + nextLine;
           } else {
             break;
           }
-          i++;
+          j++;
         }
+        console.log('Found reason:', reason);
       }
     }
 
@@ -291,7 +308,7 @@ export async function onRequest(context) {
       (nameLanguage === 'korean' && uiLanguage !== 'ko') ||
       (nameLanguage === 'japanese' && uiLanguage !== 'ja');
 
-    // Cloudflare Worker의 Response.json() 사용하여 가장 기본적인 방식으로 JSON 직렬화
+    // 파싱된 정보를 바탕으로 응답 객체 구성
     const responseObj = {
       name: name || "Unknown",
       reason: reason || "Based on your appearance"
@@ -302,7 +319,10 @@ export async function onRequest(context) {
       responseObj.pronunciation = pronunciation;
     }
     
-    // Response.json()을 사용하면 자동으로 Content-Type이 설정되고 올바른 JSON을 보장함
+    // 응답 객체를 로그로 기록하여 클라이언트에 보내지는 데이터 확인
+    console.log('Sending response object to client:', JSON.stringify(responseObj));
+    
+    // Cloudflare Worker에서는 Response.json()을 사용하여 Content-Type이 자동으로 설정되고 JSON 직렬화를 보장
     return Response.json(responseObj, {
       headers: {
         "Access-Control-Allow-Origin": "*",
