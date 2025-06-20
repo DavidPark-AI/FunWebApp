@@ -18,9 +18,13 @@ const nextConfig = {
   },
 }
 
-// 정적 내보내기와 기존 설정 통합
+// Cloudflare Pages에서 파일 크기 제한으로 정적 내보내기 유지
 module.exports = {
   ...nextConfig,
-  // Cloudflare Pages에서 API 라우트가 필요하면 이 설정을 주석 해제하세요
-  // output: 'export',
+  output: 'export',
+  // 정적 내보내기 시에도 이미지 설정 유지
+  images: {
+    ...nextConfig.images,
+    unoptimized: true, // 정적 내보내기에서 필수
+  }
 };

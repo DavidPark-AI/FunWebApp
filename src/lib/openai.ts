@@ -1,145 +1,190 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-let openai: OpenAI | null = null;
-
-export const getOpenAIClient = () => {
-  if (!openai) {
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === '') {
-      throw new Error('Missing OpenAI API key. Please set OPENAI_API_KEY in your .env.local file');
-    }
-    
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
-  return openai;
-};
-
+// 클라이언트 사이드와 서버 사이드 모두 지원하는 구조
 export type NameLanguageType = 'korean' | 'english' | 'japanese';
 export type UILanguageType = 'ko' | 'en' | 'ja';
 
-interface NameSuggestion {
+export interface NameSuggestion {
   name: string;
   pronunciation?: string;
   reason: string;
 }
 
+// 정적 내보내기 환경에서는 이 함수를 사용하지 않음 (클라이언트에서 직접 API 호출)
+const getOpenAIClient = () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('OpenAI 클라이언트는 서버 사이드에서만 초기화할 수 있습니다');
+  }
+  
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에서 설정하세요.');
+  }
+  
+  return new OpenAI({
+    apiKey,
+  });
+};
+
+// Cloudflare Pages 정적 사이트에서 사용할 OpenAI API 호출 함수
 export async function getNameSuggestion(
   imageBase64: string, 
   nameLanguage: NameLanguageType,
   uiLanguage: UILanguageType
 ): Promise<NameSuggestion> {
-  let client: OpenAI;
   try {
-    client = getOpenAIClient();
-  } catch (error) {
-    console.error('OpenAI API 키 오류:', error);
-    throw new Error('OpenAI API 키가 없거나 유효하지 않습니다. .env.local 파일에 OPENAI_API_KEY를 설정해주세요.');
-  }
-
-  try {
-    // Create appropriate prompting based on language selection
-    const messages: any[] = [
-      {
-        role: 'system',
-        content: getPrompt(nameLanguage, uiLanguage),
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'Please suggest a name based on this photo.'
+    // 클라이언트 사이드에서 실행 (Cloudflare Pages 정적 사이트)
+    if (typeof window !== 'undefined') {
+      // 개발 모드인 경우 직접 API 호출이 가능할 수 있음 (CORS 문제로 실패할 가능성 높음)
+      if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+        console.log('Development mode: Attempting direct API call');
+        // 개발 모드 직접 호출 로직 (CORS 문제로 작동하지 않을 수 있음)
+        return await makeDirectAPICall(imageBase64, nameLanguage, uiLanguage);
+      } else {
+        // 프로덕션 모드: Cloudflare Worker API 엔드포인트 호출
+        const workerEndpoint = '/api/get-name-recommendation';
+        console.log(`Using worker API endpoint: ${workerEndpoint}`);
+        
+        const response = await fetch(workerEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          {
-            type: 'image_url',
-            image_url: {
-              url: `data:image/jpeg;base64,${imageBase64}`,
-              detail: 'low',
-            },
-          },
-        ],
-      },
-    ];
-
-    // Call OpenAI Vision API - with error handling and fallback
-    let response;
-    try {
-      // 랜덤 요소 추가: 매번 다른 이름 생성을 위한 temperature 조정
-      const randomTemp = 0.7 + (Math.random() * 0.6); // 0.7~1.3 사이의 랜덤 temperature 값
-      
-      response = await client.chat.completions.create({
-        model: 'gpt-4o-mini', // 현재 Vision API에서 작동하는 모델
-        messages,
-        max_tokens: 500,
-        temperature: randomTemp, // 매번 다른 창의성 레벨 적용
-        frequency_penalty: 0.5, // 반복 단어 사용 감소
-        presence_penalty: 0.5, // 새로운 주제 도입 촉진
-      });
-    } catch (apiError: any) {
-      console.error('OpenAI API 호출 실패:', apiError);
-      // 오류 그대로 표시
-      throw new Error(`OpenAI API 호출 오류: ${apiError.message || '알 수 없는 오류'}`); 
-    }
-
-    const responseText = response.choices[0]?.message?.content || '';
-    console.log('OpenAI raw response:', responseText); // 디버깅용 로그 추가
-    
-    // 견고한 파싱을 위해 정규식 대신 더 안전한 방식 사용
-    let name = 'Unknown';
-    let pronunciation = undefined;
-    let reason = 'Based on your appearance and features.';
-    
-    // 줄 단위로 분석
-    const lines = responseText.split('\n').map(line => line.trim());
-    
-    for (const line of lines) {
-      // Name 부분 찾기
-      if (line.toLowerCase().startsWith('name:')) {
-        const namePart = line.substring('name:'.length).trim();
-        if (namePart) name = namePart;
-        continue;
-      }
-      
-      // Pronunciation 부분 찾기
-      if (line.toLowerCase().startsWith('pronunciation:')) {
-        const pronPart = line.substring('pronunciation:'.length).trim();
-        if (pronPart) pronunciation = pronPart;
-        continue;
-      }
-      
-      // Reason 부분 찾기 (여러 줄일 수 있음)
-      if (line.toLowerCase().startsWith('reason:')) {
-        reason = line.substring('reason:'.length).trim();
-        // 추가 reason 줄 검사 (다음 줄들이 다른 키워드로 시작하지 않으면 reason의 일부로 간주)
-        let i = lines.indexOf(line) + 1;
-        while (i < lines.length) {
-          const nextLine = lines[i].trim();
-          if (nextLine && !nextLine.toLowerCase().includes(':')) {
-            reason += ' ' + nextLine;
-          } else {
-            break;
-          }
-          i++;
+          body: JSON.stringify({
+            imageBase64,
+            nameLanguage,
+            uiLanguage,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Worker API error: ${response.status} - ${errorText}`);
         }
+        
+        return await response.json();
       }
+    } 
+    // 서버 사이드에서 실행 (개발 환경)
+    else {
+      return await makeDirectAPICall(imageBase64, nameLanguage, uiLanguage);
     }
-    
-    return {
-      name,
-      pronunciation: shouldShowPronunciation(nameLanguage, uiLanguage) ? pronunciation : undefined,
-      reason,
-    };
   } catch (error) {
-    console.error('OpenAI API error:', error);
-    // 더 자세한 오류 정보 표시
+    console.error('Name suggestion error:', error);
     if (error instanceof Error) {
-      throw new Error(`Failed to generate name suggestion: ${error.message}`);
+      throw new Error(`Failed to generate name: ${error.message}`);
     } else {
-      throw new Error(`Failed to generate name suggestion: ${JSON.stringify(error)}`);
+      throw new Error('Failed to generate name: Unknown error');
     }
   }
+}
+
+// 직접 OpenAI API 호출하는 함수 (서버 사이드 또는 개발 환경)
+async function makeDirectAPICall(
+  imageBase64: string,
+  nameLanguage: NameLanguageType,
+  uiLanguage: UILanguageType
+): Promise<NameSuggestion> {
+  try {
+    // 서버 사이드에서만 OpenAI 클라이언트 사용
+    if (typeof window === 'undefined') {
+      const openai = getOpenAIClient();
+      
+      // 랜덤 요소 추가: 매번 다른 이름 생성
+      const randomTemp = 0.7 + (Math.random() * 0.6); // 0.7~1.3 사이의 랜덤 temperature
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: getPrompt(nameLanguage, uiLanguage)
+          },
+          {
+            role: "user", 
+            content: [
+              {
+                type: "text",
+                text: "Please suggest a name based on this photo."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`,
+                  detail: "low"
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 500,
+        temperature: randomTemp,
+        frequency_penalty: 0.5,
+        presence_penalty: 0.5
+      });
+      
+      return parseResponse(response, nameLanguage, uiLanguage);
+    } 
+    // 클라이언트 사이드에서는 CORS 문제로 직접 호출이 불가능할 수 있음
+    else {
+      throw new Error('클라이언트에서 직접 OpenAI API를 호출할 수 없습니다. API 키가 노출될 위험이 있습니다.');
+    }
+  } catch (apiError: any) {
+    console.error('OpenAI API 호출 실패:', apiError);
+    throw new Error(`OpenAI API 호출 오류: ${apiError.message || '알 수 없는 오류'}`);
+  }
+}
+
+// OpenAI API 응답 파싱 함수
+function parseResponse(response: any, nameLanguage: NameLanguageType, uiLanguage: UILanguageType): NameSuggestion {
+  const responseText = response.choices[0]?.message?.content || '';
+  console.log('OpenAI raw response:', responseText); // 디버깅용 로그 추가
+  
+  // 견고한 파싱을 위해 정규식 대신 더 안전한 방식 사용
+  let name = 'Unknown';
+  let pronunciation = undefined;
+  let reason = 'Based on your appearance and features.';
+  
+  // 줄 단위로 분석
+  const lines = responseText.split('\n').map((line: string) => line.trim());
+  
+  for (const line of lines) {
+    // Name 부분 찾기
+    if (line.toLowerCase().startsWith('name:')) {
+      const namePart = line.substring('name:'.length).trim();
+      if (namePart) name = namePart;
+      continue;
+    }
+    
+    // Pronunciation 부분 찾기
+    if (line.toLowerCase().startsWith('pronunciation:')) {
+      const pronPart = line.substring('pronunciation:'.length).trim();
+      if (pronPart) pronunciation = pronPart;
+      continue;
+    }
+    
+    // Reason 부분 찾기 (여러 줄일 수 있음)
+    if (line.toLowerCase().startsWith('reason:')) {
+      reason = line.substring('reason:'.length).trim();
+      // 추가 reason 줄 검사 (다음 줄들이 다른 키워드로 시작하지 않으면 reason의 일부로 간주)
+      let i = lines.indexOf(line) + 1;
+      while (i < lines.length) {
+        const nextLine = lines[i].trim();
+        if (nextLine && !nextLine.toLowerCase().includes(':')) {
+          reason += ' ' + nextLine;
+        } else {
+          break;
+        }
+        i++;
+      }
+    }
+  }
+  
+  return {
+    name,
+    pronunciation: shouldShowPronunciation(nameLanguage, uiLanguage) ? pronunciation : undefined,
+    reason,
+  };
 }
 
 // Helper to determine if pronunciation should be shown
