@@ -62,7 +62,25 @@ export async function getNameSuggestion(
           throw new Error(`Worker API error: ${response.status} - ${errorText}`);
         }
         
-        return await response.json();
+        try {
+          // 응답 텍스트 먼저 가져오기
+          const responseText = await response.text();
+          console.log('Worker API raw response:', responseText);
+          
+          // 유효한 JSON인지 확인
+          if (!responseText || responseText.trim() === '') {
+            throw new Error('Empty response from worker');
+          }
+          
+          // JSON으로 파싱
+          const parsedResponse = JSON.parse(responseText);
+          return parsedResponse;
+        } catch (error) {
+          console.error('JSON parse error:', error);
+          // 오류를 Error 타입으로 변환하여 메시지에 접근
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          throw new Error(`Failed to parse worker response: ${errorMessage}`);
+        }
       }
     } 
     // 서버 사이드에서 실행 (개발 환경)

@@ -140,11 +140,33 @@ export async function onRequest(context) {
       (nameLanguage === 'korean' && uiLanguage !== 'ko') ||
       (nameLanguage === 'japanese' && uiLanguage !== 'ja');
 
-    return new Response(JSON.stringify({
-      name,
-      pronunciation: shouldShowPronunciation ? pronunciation : undefined,
-      reason
-    }), { headers });
+    // JSON.stringify가 잘못된 경우 오류를 방지하기 위해 try-catch 처리
+    try {
+      const responseData = {
+        name,
+        pronunciation: shouldShowPronunciation ? pronunciation : undefined,
+        reason
+      };
+      
+      const jsonResponse = JSON.stringify(responseData);
+      // 유효한 JSON 형식인지 확인 (이중 보호책)
+      JSON.parse(jsonResponse);
+      
+      return new Response(jsonResponse, { 
+        headers,
+        status: 200 
+      });
+    } catch (jsonError) {
+      console.error('JSON serialization error:', jsonError);
+      return new Response(JSON.stringify({
+        error: 'JSON serialization error',
+        name: name || 'Unknown',
+        reason: reason || 'Could not generate a proper response'
+      }), { 
+        headers,
+        status: 500 
+      });
+    }
 
   } catch (error) {
     console.error('Error processing request:', error);
