@@ -27,10 +27,10 @@ export default function LanguageSwitcher() {
         <Link
           href={getNewPath(locale)}
           key={locale}
-          className={`px-3 py-1 rounded-md ${
+          className={`px-3 py-1 rounded-md text-base font-medium border-2 ${
             currentLocale === locale
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-100 hover:bg-gray-200'
+              ? 'bg-primary-600 text-white border-primary-700 shadow-md'
+              : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
           }`}
         >
           {locale === 'en' ? '🇺🇸 English' : 

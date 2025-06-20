@@ -61,10 +61,10 @@ function LanguageButton({ label, emoji, isSelected, onClick }: LanguageButtonPro
     <button
       type="button"
       onClick={onClick}
-      className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all
+      className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all border-2
         ${isSelected 
-          ? 'bg-primary-500 text-white shadow-md scale-105' 
-          : 'bg-gray-100 hover:bg-gray-200'
+          ? 'bg-primary-600 text-white border-primary-800 shadow-lg scale-105' 
+          : 'bg-white text-gray-800 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
         }`}
     >
       <span className="text-2xl mb-1">{emoji}</span>

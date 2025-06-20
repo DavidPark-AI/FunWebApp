@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import PhotoUploader from '@/components/PhotoUploader';
 import NameLanguageSelector, { NameLanguage } from '@/components/NameLanguageSelector';
 import ResultCard, { NameResult } from '@/components/ResultCard';
 import AdBanner from '@/components/AdBanner';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
 
 // Language content for English UI
 const translations = {
-  title: 'Name Recommender',
+  title: 'What\'s My Name?',
   subtitle: 'Get name recommendations based on your photo',
   uploadTitle: 'Upload your photo',
   uploadInstructions: 'Drag & drop your photo or click to upload (max 5MB)',
@@ -38,16 +39,33 @@ const translations = {
 
 export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [nameLanguage, setNameLanguage] = useState<NameLanguage>('english');
+  const [nameLanguage, setNameLanguage] = useState<NameLanguage>('korean');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAd, setShowAd] = useState(false);
   const [result, setResult] = useState<NameResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback((file: File) => {
+    // Clear all previous data
     setSelectedFile(file);
     setResult(null);
     setError(null);
+    setIsAnalyzing(false);
+    setShowAd(false);
+    
+    // Clear existing stored image before saving new one
+    clearImageFromLocalStorage();
+    
+    // Save new image
+    saveImageToLocalStorage(file);
+  }, []);
+
+  // 컴포넌트 마운트 시 로컬 스토리지에서 이미지 로드
+  useEffect(() => {
+    const savedImage = getImageFromLocalStorage();
+    if (savedImage) {
+      setSelectedFile(savedImage);
+    }
   }, []);
 
   const handleAnalyze = async () => {
@@ -88,9 +106,12 @@ export default function HomePage() {
   };
 
   const handleReset = () => {
-    setSelectedFile(null);
+    // Reset results only while keeping the image
     setResult(null);
     setError(null);
+    
+    // Keep the image for another try
+    // Not removing image from storage (no clearImageFromLocalStorage)
   };
 
   // Determine the app URL for sharing
@@ -120,29 +141,42 @@ export default function HomePage() {
                   maxSizeInBytes={5 * 1024 * 1024} // 5MB
                 />
 
-                {selectedFile && (
-                  <>
-                    <NameLanguageSelector
-                      selectedLanguage={nameLanguage}
-                      onChange={setNameLanguage}
-                      labels={{
-                        title: translations.languageSelect,
-                        korean: translations.korean,
-                        english: translations.english,
-                        japanese: translations.japanese,
-                      }}
-                    />
-
-                    <div className="flex justify-center mt-6">
+                <div className="mt-3 flex flex-col items-center">
+                  <div className="mb-3">
+                    <p className="mb-2 text-sm text-gray-600 text-center">
+                      {translations.languageSelect}
+                    </p>
+                    <div className="flex gap-2">
                       <button
-                        onClick={handleAnalyze}
-                        className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-semibold"
+                        onClick={() => setNameLanguage('korean')}
+                        className={`px-3 py-1 rounded text-sm ${nameLanguage === 'korean' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} font-medium transition-colors`}
                       >
-                        {translations.analyze}
+                        🇰🇷 {translations.korean}
+                      </button>
+                      <button
+                        onClick={() => setNameLanguage('english')}
+                        className={`px-3 py-1 rounded text-sm ${nameLanguage === 'english' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} font-medium transition-colors`}
+                      >
+                        🇺🇸 {translations.english}
+                      </button>
+                      <button
+                        onClick={() => setNameLanguage('japanese')}
+                        className={`px-3 py-1 rounded text-sm ${nameLanguage === 'japanese' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} font-medium transition-colors`}
+                      >
+                        🇯🇵 {translations.japanese}
                       </button>
                     </div>
-                  </>
-                )}
+                  </div>
+                  
+                  {selectedFile && (
+                    <button
+                      onClick={handleAnalyze}
+                      className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-semibold"
+                    >
+                      {translations.analyze}
+                    </button>
+                  )}
+                </div>
 
                 {error && (
                   <div className="mt-6 p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-center">

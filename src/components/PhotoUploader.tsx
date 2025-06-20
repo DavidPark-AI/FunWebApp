@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Image from 'next/image';
+import { saveImagePreviewUrl, getImagePreviewUrl } from '@/lib/imageStorage';
 
 interface PhotoUploaderProps {
   onUpload: (file: File) => void;
@@ -16,6 +17,14 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // 컴포넌트 마운트 시 저장된 이미지 미리보기 로드
+  useEffect(() => {
+    const savedPreview = getImagePreviewUrl();
+    if (savedPreview) {
+      setPreview(savedPreview);
+    }
+  }, []);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
     const file = acceptedFiles[0];
@@ -30,6 +39,9 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
     // Create a preview
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
+    
+    // Save the preview URL to storage for persistent access across language changes
+    saveImagePreviewUrl(objectUrl);
     
     // Pass the file to the parent component
     onUpload(file);

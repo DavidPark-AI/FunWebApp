@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Name Recommender',
+  title: '나의 이름은?',
   description: 'Get name recommendations based on your photo',
 }
 

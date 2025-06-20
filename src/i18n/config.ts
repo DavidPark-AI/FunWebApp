@@ -1,6 +1,6 @@
 export const i18nConfig = {
-  locales: ['en', 'ko', 'ja'],
-  defaultLocale: 'en'
+  locales: ['ko', 'en', 'ja'],
+  defaultLocale: 'ko'
 };
 
 export type Locale = (typeof i18nConfig)['locales'][number];

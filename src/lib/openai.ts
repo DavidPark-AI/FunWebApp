@@ -70,10 +70,18 @@ export async function getNameSuggestion(
     // Call OpenAI Vision API - with error handling and fallback
     let response;
     try {
+      // 랜덤 요소 추가: 매번 다른 이름 생성을 위한 temperature 조정 및 랜덤 seed 추가
+      const randomSeed = Math.floor(Math.random() * 1000000); // 더 큰 범위의 랜덤 시드 생성
+      const randomTemp = 0.7 + (Math.random() * 0.6); // 0.7~1.3 사이의 랜덤 temperature 값
+      
       response = await client.chat.completions.create({
-        model: 'gpt-4.1-minin-vision',
+        model: 'gpt-4-vision-preview', // 올바른 모델명으로 수정
         messages,
         max_tokens: 500,
+        temperature: randomTemp, // 매번 다른 창의성 레벨 적용
+        seed: randomSeed, // 랜덤 시드 적용
+        frequency_penalty: 0.5, // 반복 단어 사용 감소
+        presence_penalty: 0.5, // 새로운 주제 도입 촉진
       });
     } catch (apiError) {
       console.error('OpenAI API call failed:', apiError);
@@ -116,31 +124,87 @@ function shouldShowPronunciation(nameLanguage: NameLanguageType, uiLanguage: UIL
 
 // Generate appropriate prompt based on language selection
 function getPrompt(nameLanguage: NameLanguageType, uiLanguage: UILanguageType): string {
+  const currentTime = new Date().getTime();
+  // 더 강한 무작위성을 위한 인자 추가
+  const randomSeed = Math.floor(Math.random() * 1000000000);
+  
   const basePrompt = {
-    en: 'You are a professional name recommender. Look at the uploaded photo and suggest a name that would suit this person. Reply in English with: Name: [suggested name]\\nPronunciation: [pronunciation in English if needed]\\nReason: [brief reason for this name selection]',
-    ko: '당신은 전문적인 이름 추천가입니다. 업로드된 사진을 보고 이 사람에게 어울릴 이름을 제안하세요. 한국어로 다음과 같이 답하세요: Name: [추천 이름]\\nPronunciation: [필요한 경우 영어로 발음]\\nReason: [이 이름을 선택한 간단한 이유]',
-    ja: 'あなたは専門の名前推薦者です。アップロードされた写真を見て、この人に合う名前を提案してください。日本語で次のように答えてください：Name: [推奨された名前]\\nPronunciation: [必要に応じて英語での発音]\\nReason: [この名前を選んだ簡単な理由]'
+    en: `You are an advanced name recommendation system that analyzes appearance and suggests creative, fitting names. Follow this exact process:
+
+1. FIRST, analyze the photo carefully and note: approximate age, perceived gender, facial features, expression, clothing style, hair style, and any distinctive characteristics.
+
+2. SECOND, based on your analysis, create a LIST OF 10 UNIQUE AND DIVERSE name suggestions that would suit this person. Include unusual/creative names, not just common ones.
+
+3. THIRD, randomly select ONE name from your list of 10.
+
+4. FINALLY, respond ONLY with:
+Name: [your selected name]
+Pronunciation: [how to pronounce it]
+Reason: [brief explanation why this name fits the person]
+
+Session ID: ${currentTime}-${randomSeed}. Use this to ensure results are different each time.`,
+    
+    ko: `당신은 외모를 분석하고 창의적이고 적합한 이름을 추천하는 고급 이름 추천 시스템입니다. 다음 과정을 정확히 따르세요:
+
+1. 먼저, 사진을 주의 깊게 분석하고 다음을 기록하세요: 대략적인 나이, 인식된 성별, 얼굴 특징, 표정, 옷 스타일, 머리 스타일, 그리고 눈에 띄는 특징들.
+
+2. 둘째, 분석을 토대로 이 사람에게 어울릴 만한 10가지 고유하고 다양한 이름 목록을 작성하세요. 흔한 이름뿐만 아니라 특이하고 창의적인 이름도 포함하세요.
+
+3. 셋째, 10개 이름 목록에서 무작위로 한 개의 이름을 선택하세요.
+
+4. 마지막으로, 다음 형식으로만 응답하세요:
+Name: [선택한 이름]
+Pronunciation: [발음 방법]
+Reason: [이 이름이 그 사람에게 어울리는 간단한 이유]
+
+세션 ID: ${currentTime}-${randomSeed}. 매번 다른 결과를 보장하기 위해 이 ID를 활용하세요.`,
+    
+    ja: `あなたは、外見を分析し、創造的で適切な名前を提案する先進的な名前推薦システムです。次の手順に正確に従ってください：
+
+1. まず、写真を注意深く分析し、次の点に注目してください：おおよその年齢、認識された性別、顔の特徴、表情、服装スタイル、髪型、およびその他の特徴的な特性。
+
+2. 次に、あなたの分析に基づいて、この人に合う10のユニークで多様な名前の候補リストを作成してください。一般的な名前だけでなく、珍しい/創造的な名前も含めてください。
+
+3. 第三に、あなたの10の名前リストからランダムに1つの名前を選択してください。
+
+4. 最後に、次の形式でのみ回答してください：
+Name: [選択した名前]
+Pronunciation: [発音方法]
+Reason: [この名前がその人に合う簡単な理由]
+
+セッションID：${currentTime}-${randomSeed}。これを使用して、毎回異なる結果を確実にしてください。`
   }[uiLanguage];
   
   const languageSpecificInstruction = {
     korean: {
-      en: 'Suggest a Korean name suitable for this person.',
-      ko: '이 사람에게 어울리는 한국 이름을 추천해주세요.',
-      ja: 'この人に合う韓国語の名前を提案してください。'
+      en: 'Focus on suggesting unique Korean names. First analyze physical features, age impression, style, etc. Then create 10 different Korean names, ensuring a mix of modern and traditional options, with varied meanings. AVOID common names like MinJun, JiHoon, or SooJin. Finally, choose one name from your list randomly and explain why it fits.',
+      
+      ko: '독특한 한국 이름을 추천하는 데 집중하세요. 먼저 신체적 특징, 나이 인상, 스타일 등을 분석하세요. 그런 다음 현대적인 이름과 전통적인 이름을 다양한 의미로 혼합하여 10가지 다양한 한국 이름을 만드세요. 민준, 지훈, 수진과 같은 흔한 이름은 피하세요. 마지막으로 목록에서 무작위로 하나의 이름을 선택하고 그것이 왜 어울리는지 설명하세요.',
+      
+      ja: 'ユニークな韓国の名前の提案に焦点を当ててください。まず、身体的特徴、年齢の印象、スタイルなどを分析します。次に、現代的な名前と伝統的な名前を様々な意味で混ぜた10の異なる韓国名を作成してください。MinJun、JiHoon、SooJinなどの一般的な名前は避けてください。最後に、リストからランダムに1つの名前を選び、なぜそれが適しているのかを説明してください。'
     },
+    
     english: {
-      en: 'Suggest an English name suitable for this person.',
-      ko: '이 사람에게 어울리는 영어 이름을 추천해주세요.',
-      ja: 'この人に合う英語の名前を提案してください。'
+      en: 'Focus on suggesting unique English names. First analyze physical features, age impression, style, etc. Then create 10 different English names, ensuring a mix of modern and classic options, with varied origins and meanings. AVOID common names like John, Ethan, or Emma. Finally, choose one name from your list randomly and explain why it fits.',
+      
+      ko: '독특한 영어 이름을 추천하는 데 집중하세요. 먼저 신체적 특징, 나이 인상, 스타일 등을 분석하세요. 그런 다음 현대적인 이름과 고전적인 이름을 다양한 기원과 의미로 혼합하여 10가지 다양한 영어 이름을 만드세요. John, Ethan, Emma와 같은 흔한 이름은 피하세요. 마지막으로 목록에서 무작위로 하나의 이름을 선택하고 그것이 왜 어울리는지 설명하세요.',
+      
+      ja: 'ユニークな英語の名前の提案に焦点を当ててください。まず、身体的特徴、年齢の印象、スタイルなどを分析します。次に、現代的な名前と古典的な名前を様々な起源と意味で混ぜた10の異なる英語名を作成してください。John、Ethan、Emmaなどの一般的な名前は避けてください。最後に、リストからランダムに1つの名前を選び、なぜそれが適しているのかを説明してください。'
     },
+    
     japanese: {
-      en: 'Suggest a Japanese name suitable for this person.',
-      ko: '이 사람에게 어울리는 일본 이름을 추천해주세요.',
-      ja: 'この人に合う日本語の名前を提案してください。'
+      en: 'Focus on suggesting unique Japanese names. First analyze physical features, age impression, style, etc. Then create 10 different Japanese names, ensuring a mix of modern and traditional options, with varied kanji combinations and meanings. AVOID common names like Haruki, Yuki, or Aiko. Finally, choose one name from your list randomly and explain why it fits.',
+      
+      ko: '독특한 일본 이름을 추천하는 데 집중하세요. 먼저 신체적 특징, 나이 인상, 스타일 등을 분석하세요. 그런 다음 현대적인 이름과 전통적인 이름을 다양한 한자 조합과 의미로 혼합하여 10가지 다양한 일본 이름을 만드세요. Haruki, Yuki, Aiko와 같은 흔한 이름은 피하세요. 마지막으로 목록에서 무작위로 하나의 이름을 선택하고 그것이 왜 어울리는지 설명하세요.',
+      
+      ja: 'ユニークな日本の名前の提案に焦点を当ててください。まず、身体的特徴、年齢の印象、スタイルなどを分析します。次に、現代的な名前と伝統的な名前を様々な漢字の組み合わせと意味で混ぜた10の異なる日本名を作成してください。ハルキ、ユキ、アイコなどの一般的な名前は避けてください。最後に、リストからランダムに1つの名前を選び、なぜそれが適しているのかを説明してください。'
     }
   }[nameLanguage][uiLanguage];
   
-  return `${basePrompt} ${languageSpecificInstruction}`;
+  // 시간 및 임의 값 기반 고유 요청 ID
+  const uniqueRequestId = `${currentTime}-${randomSeed}-${Math.random().toString(36).substring(2, 10)}`;
+  
+  return `${basePrompt} ${languageSpecificInstruction} IMPORTANT: Generate a completely unique result for this request ID: ${uniqueRequestId}`;
 }
 
 // Mock data for development without API key

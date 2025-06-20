@@ -18,17 +18,17 @@ export default function AdBanner({ adSlot, adFormat = 'rectangle' }: AdBannerPro
   const getDimensions = () => {
     switch (adFormat) {
       case 'rectangle':
-        return { width: '300px', height: '250px' };
+        return { width: '300px', height: '250px', bgWidth: '320px', bgHeight: '270px' };
       case 'leaderboard':
-        return { width: '728px', height: '90px' };
+        return { width: '728px', height: '90px', bgWidth: '748px', bgHeight: '110px' };
       case 'popup':
-        return { width: '250px', height: '250px' };
+        return { width: '250px', height: '250px', bgWidth: '270px', bgHeight: '270px' };
       default:
-        return { width: '300px', height: '250px' };
+        return { width: '300px', height: '250px', bgWidth: '320px', bgHeight: '270px' };
     }
   };
   
-  const { width, height } = getDimensions();
+  const { width, height, bgWidth, bgHeight } = getDimensions();
 
   useEffect(() => {
     // Only attempt to load ads when in production environment
@@ -58,17 +58,32 @@ export default function AdBanner({ adSlot, adFormat = 'rectangle' }: AdBannerPro
       ) : (
         <div 
           style={{ 
-            width, 
-            height, 
+            width: bgWidth, 
+            height: bgHeight, 
             backgroundColor: '#e0e0e0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto',
-            border: '1px solid #ccc'
+            border: '1px solid #ccc',
+            position: 'relative',
+            overflow: 'hidden'
           }}
         >
-          <p>Ad Placeholder ({width}x{height})</p>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width,
+            height,
+            border: '1px dashed #888',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <p>Ad Placeholder ({width}x{height})</p>
+          </div>
         </div>
       )}
     </div>
