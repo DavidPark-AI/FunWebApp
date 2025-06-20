@@ -5,7 +5,7 @@ export async function onRequest(context) {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json;charset=utf-8"
   };
 
   // OPTIONS 요청 처리 (CORS preflight)
@@ -140,40 +140,40 @@ export async function onRequest(context) {
       (nameLanguage === 'korean' && uiLanguage !== 'ko') ||
       (nameLanguage === 'japanese' && uiLanguage !== 'ja');
 
-    // JSON.stringify가 잘못된 경우 오류를 방지하기 위해 try-catch 처리
-    try {
-      const responseData = {
-        name,
-        pronunciation: shouldShowPronunciation ? pronunciation : undefined,
-        reason
-      };
-      
-      const jsonResponse = JSON.stringify(responseData);
-      // 유효한 JSON 형식인지 확인 (이중 보호책)
-      JSON.parse(jsonResponse);
-      
-      return new Response(jsonResponse, { 
-        headers,
-        status: 200 
-      });
-    } catch (jsonError) {
-      console.error('JSON serialization error:', jsonError);
-      return new Response(JSON.stringify({
-        error: 'JSON serialization error',
-        name: name || 'Unknown',
-        reason: reason || 'Could not generate a proper response'
-      }), { 
-        headers,
-        status: 500 
-      });
+    // Cloudflare Worker의 Response.json() 사용하여 가장 기본적인 방식으로 JSON 직렬화
+    const responseObj = {
+      name: name || "Unknown",
+      reason: reason || "Based on your appearance"
+    };
+    
+    // 발음이 있고 사용해야 하는 경우에만 추가
+    if (shouldShowPronunciation && pronunciation) {
+      responseObj.pronunciation = pronunciation;
     }
+    
+    // Response.json()을 사용하면 자동으로 Content-Type이 설정되고 올바른 JSON을 보장함
+    return Response.json(responseObj, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    });
 
   } catch (error) {
     console.error('Error processing request:', error);
-    return new Response(JSON.stringify({ error: `Internal server error: ${error.message}` }), {
-      status: 500,
-      headers
-    });
+    // 오류 응답도 Response.json() 사용
+    return Response.json(
+      { error: `Internal server error: ${error.message || 'Unknown error'}` },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        },
+        status: 500
+      }
+    );
   }
 }
 

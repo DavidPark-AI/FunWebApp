@@ -62,24 +62,23 @@ export async function getNameSuggestion(
           throw new Error(`Worker API error: ${response.status} - ${errorText}`);
         }
         
+        // 가장 기본적인 방식으로 응답 처리
         try {
-          // 응답 텍스트 먼저 가져오기
-          const responseText = await response.text();
-          console.log('Worker API raw response:', responseText);
-          
-          // 유효한 JSON인지 확인
-          if (!responseText || responseText.trim() === '') {
-            throw new Error('Empty response from worker');
+          console.log('Worker API response status:', response.status);
+          // 바로 response.json()을 사용하여 파싱 (fetch API 기본 기능 활용)
+          return await response.json();
+        } catch (error) {
+          console.error('Worker API response error:', error);
+          // 지원용 디버깅 정보 수집
+          try {
+            const errorText = await response.text();
+            console.log('Worker API raw error response:', errorText);
+          } catch (e) {
+            console.log('Could not get error response text');
           }
           
-          // JSON으로 파싱
-          const parsedResponse = JSON.parse(responseText);
-          return parsedResponse;
-        } catch (error) {
-          console.error('JSON parse error:', error);
-          // 오류를 Error 타입으로 변환하여 메시지에 접근
           const errorMessage = error instanceof Error ? error.message : String(error);
-          throw new Error(`Failed to parse worker response: ${errorMessage}`);
+          throw new Error(`Worker API response error: ${errorMessage}`);
         }
       }
     } 
