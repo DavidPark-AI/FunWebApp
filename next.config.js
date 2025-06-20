@@ -18,7 +18,9 @@ const nextConfig = {
   },
 }
 
-//module.exports = nextConfig
+// 정적 내보내기와 기존 설정 통합
 module.exports = {
-  output: 'export',  // ✅ 정적 사이트로 내보내기
+  ...nextConfig,
+  // Cloudflare Pages에서 API 라우트가 필요하면 이 설정을 주석 해제하세요
+  // output: 'export',
 };
