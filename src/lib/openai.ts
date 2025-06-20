@@ -45,16 +45,22 @@ export async function getNameSuggestion(
         const workerEndpoint = '/api/get-name-recommendation';
         console.log(`Using worker API endpoint: ${workerEndpoint}`);
         
+        // FormData 객체를 사용하여 multipart/form-data 형식으로 요청
+        const formData = new FormData();
+        formData.append('imageBase64', imageBase64);
+        formData.append('nameLanguage', nameLanguage);
+        formData.append('uiLanguage', uiLanguage);
+        
+        console.log('Sending request with FormData', {
+          nameLanguage,
+          uiLanguage,
+          imageBase64Length: imageBase64 ? imageBase64.length : 0
+        });
+        
         const response = await fetch(workerEndpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageBase64,
-            nameLanguage,
-            uiLanguage,
-          }),
+          // Content-Type 헤더를 포함하지 않음 - fetch API가 자동으로 multipart/form-data로 설정
+          body: formData,
         });
         
         if (!response.ok) {
