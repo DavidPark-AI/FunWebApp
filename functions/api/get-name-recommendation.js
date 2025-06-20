@@ -60,13 +60,42 @@ export async function onRequest(context) {
         // 이미지 데이터 찾기
         if (formData.has('image')) {
           const file = formData.get('image');
-          // File 이나 Blob을 base64로 변환
+          console.log('Image file details:', {
+            name: file.name,
+            type: file.type,
+            size: file.size
+          });
+          
+          // File 이나 Blob을 base64로 변환 - 개선된 방법
           if (file && (file instanceof File || file instanceof Blob)) {
-            const arrayBuffer = await file.arrayBuffer();
-            const bytes = new Uint8Array(arrayBuffer);
-            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-            imageBase64 = btoa(binary);
-            console.log('Image data converted from file, length:', imageBase64?.length || 0);
+            try {
+              // 1. 바이너리 데이터 가져오기
+              const arrayBuffer = await file.arrayBuffer();
+              
+              // 2. Base64 인코딩 - 웹 API 활용
+              const base64WithoutPrefix = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  // data:image/jpeg;base64, 형태의 데이터 URI에서 base64 부분만 추출
+                  const result = reader.result;
+                  const commaIndex = result.indexOf(',');
+                  const base64 = commaIndex >= 0 ? result.substring(commaIndex + 1) : result;
+                  resolve(base64);
+                };
+                reader.readAsDataURL(file);
+              });
+              
+              // 3. 추출한 base64 저장 (prefix 없이)
+              imageBase64 = base64WithoutPrefix;
+              console.log('Image converted using FileReader, length:', imageBase64?.length || 0);
+              
+              // 4. 이미지 데이터 처음 20바이트 로깅 (디버깅용)
+              if (imageBase64 && imageBase64.length > 20) {
+                console.log('First 20 chars of base64:', imageBase64.substring(0, 20));
+              }
+            } catch (error) {
+              console.error('Error converting image to base64:', error);
+            }
           }
         } 
         else if (formData.has('imageBase64')) {
@@ -139,11 +168,30 @@ export async function onRequest(context) {
     console.log('Creating OpenAI request with image');
     
     // base64 이미지 유효성 확인
-    // base64가 데이터 URI스키마로 시작하지 않는 경우 추가
-    let imageUrl = imageBase64;
-    if (imageBase64 && !imageBase64.startsWith('data:')) {
-      // MIME 형식 추측 (기본 JPEG 가정)
-      imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+    // OpenAI API는 data: 스키마가 필요함
+    let imageUrl;
+    if (imageBase64 && typeof imageBase64 === 'string') {
+      // 이미 data: URI 스키마가 있는지 확인
+      if (imageBase64.startsWith('data:')) {
+        imageUrl = imageBase64;
+      } 
+      // MIME 형식 추측 - File 객체의 type 속성을 사용하거나 기본으로 JPEG 가정
+      else {
+        imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+      }
+      
+      // 이미지 URL의 형식 및 길이 확인
+      console.log('Image URL format check:', {
+        startsWithData: imageUrl.startsWith('data:'),
+        urlLength: imageUrl.length,
+        urlPrefix: imageUrl.substring(0, 30) + '...'
+      });
+    } else {
+      console.error('Invalid image data:', typeof imageBase64);
+      return Response.json(
+        { error: "Invalid image data format" },
+        { headers, status: 400 }
+      );
     }
     
     // OpenAI API 호출
