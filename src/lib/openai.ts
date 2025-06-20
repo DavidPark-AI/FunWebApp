@@ -1,12 +1,14 @@
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
-// In production, you should get this from environment variable
-// Use process.env.OPENAI_API_KEY in production
 let openai: OpenAI | null = null;
 
 export const getOpenAIClient = () => {
   if (!openai) {
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === '') {
+      throw new Error('Missing OpenAI API key. Please set OPENAI_API_KEY in your .env.local file');
+    }
+    
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -28,18 +30,12 @@ export async function getNameSuggestion(
   nameLanguage: NameLanguageType,
   uiLanguage: UILanguageType
 ): Promise<NameSuggestion> {
-  // If no API key is available, return mock data for development
-  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.trim() === '') {
-    console.warn('No OpenAI API key found. Using mock data.');
-    return getMockNameData(nameLanguage, uiLanguage);
-  }
-
   let client: OpenAI;
   try {
     client = getOpenAIClient();
   } catch (error) {
-    console.warn('Failed to initialize OpenAI client:', error);
-    return getMockNameData(nameLanguage, uiLanguage);
+    console.error('OpenAI API 키 오류:', error);
+    throw new Error('OpenAI API 키가 없거나 유효하지 않습니다. .env.local 파일에 OPENAI_API_KEY를 설정해주세요.');
   }
 
   try {
@@ -70,23 +66,21 @@ export async function getNameSuggestion(
     // Call OpenAI Vision API - with error handling and fallback
     let response;
     try {
-      // 랜덤 요소 추가: 매번 다른 이름 생성을 위한 temperature 조정 및 랜덤 seed 추가
-      const randomSeed = Math.floor(Math.random() * 1000000); // 더 큰 범위의 랜덤 시드 생성
+      // 랜덤 요소 추가: 매번 다른 이름 생성을 위한 temperature 조정
       const randomTemp = 0.7 + (Math.random() * 0.6); // 0.7~1.3 사이의 랜덤 temperature 값
       
       response = await client.chat.completions.create({
-        model: 'gpt-4-vision-preview', // 올바른 모델명으로 수정
+        model: 'gpt-4o-mini', // 현재 Vision API에서 작동하는 모델
         messages,
         max_tokens: 500,
         temperature: randomTemp, // 매번 다른 창의성 레벨 적용
-        seed: randomSeed, // 랜덤 시드 적용
         frequency_penalty: 0.5, // 반복 단어 사용 감소
         presence_penalty: 0.5, // 새로운 주제 도입 촉진
       });
-    } catch (apiError) {
-      console.error('OpenAI API call failed:', apiError);
-      // API 호출 실패 시 모의 데이터로 대체
-      return getMockNameData(nameLanguage, uiLanguage);
+    } catch (apiError: any) {
+      console.error('OpenAI API 호출 실패:', apiError);
+      // 오류 그대로 표시
+      throw new Error(`OpenAI API 호출 오류: ${apiError.message || '알 수 없는 오류'}`); 
     }
 
     const responseText = response.choices[0]?.message?.content || '';
@@ -207,56 +201,4 @@ Reason: [この名前がその人に合う簡単な理由]
   return `${basePrompt} ${languageSpecificInstruction} IMPORTANT: Generate a completely unique result for this request ID: ${uniqueRequestId}`;
 }
 
-// Mock data for development without API key
-function getMockNameData(nameLanguage: NameLanguageType, uiLanguage: UILanguageType): NameSuggestion {
-  const mockData = {
-    korean: {
-      en: {
-        name: '민준 (Min-Jun)',
-        pronunciation: 'Min-Joon',
-        reason: 'This name suggests someone who is clever and talented. The features in the photo show a bright and intelligent look.'
-      },
-      ko: {
-        name: '민준',
-        reason: '지적이고 재능있는 사람을 의미하는 이름입니다. 사진에서 보이는 특징이 밝고 지적인 느낌을 줍니다.'
-      },
-      ja: {
-        name: '民準 (민준)',
-        pronunciation: 'ミンジュン',
-        reason: 'この名前は賢くて才能のある人を表します。写真の特徴から明るく知的な印象を受けます。'
-      }
-    },
-    english: {
-      en: {
-        name: 'Ethan',
-        reason: 'This name conveys strength and reliability. The facial features in the photo suggest someone who is trustworthy and dependable.'
-      },
-      ko: {
-        name: 'Ethan',
-        reason: '이 이름은 강인함과 신뢰성을 전달합니다. 사진의 얼굴 특징은 믿을 수 있고 의지할 수 있는 사람임을 시사합니다.'
-      },
-      ja: {
-        name: 'Ethan',
-        reason: 'この名前は強さと信頼性を伝えます。写真の顔の特徴から、信頼でき、頼りになる人であることが示唆されます。'
-      }
-    },
-    japanese: {
-      en: {
-        name: 'Haruki (春輝)',
-        pronunciation: 'Ha-roo-key',
-        reason: 'This name means "shining spring" and fits well with the bright expression in the photo. The clear eyes suggest a radiant personality.'
-      },
-      ko: {
-        name: '하루키 (春輝)',
-        pronunciation: '하루키',
-        reason: '이 이름은 "빛나는 봄"을 의미하며 사진의 밝은 표정과 잘 어울립니다. 선명한 눈은 빛나는 성격을 보여줍니다.'
-      },
-      ja: {
-        name: '春輝 (はるき)',
-        reason: 'この名前は「輝く春」という意味で、写真の明るい表情によく合います。澄んだ目が輝く人格を示しています。'
-      }
-    }
-  };
-  
-  return mockData[nameLanguage][uiLanguage as keyof typeof mockData[typeof nameLanguage]];
-}
+// Mock data section removed since we're only using the real API now
