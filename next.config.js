@@ -18,4 +18,7 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+//module.exports = nextConfig
+module.exports = {
+  output: 'export',  // ✅ 정적 사이트로 내보내기
+};
