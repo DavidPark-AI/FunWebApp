@@ -135,42 +135,57 @@ export async function onRequest(context) {
     const uniqueRequestId = `${currentTime}-${randomSeed}-${Math.random().toString(36).substring(2, 10)}`;
     const prompt = `${basePrompt} ${languageSpecificInstruction} IMPORTANT: Generate a completely unique result for this request ID: ${uniqueRequestId}`;
 
+    // 디버깅: 이미지 URL 형식 확인
+    console.log('Creating OpenAI request with image');
+    
+    // base64 이미지 유효성 확인
+    // base64가 데이터 URI스키마로 시작하지 않는 경우 추가
+    let imageUrl = imageBase64;
+    if (imageBase64 && !imageBase64.startsWith('data:')) {
+      // MIME 형식 추측 (기본 JPEG 가정)
+      imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+    }
+    
     // OpenAI API 호출
+    const requestBody = {
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: prompt
+        },
+        {
+          role: "user", 
+          content: [
+            {
+              type: "text",
+              text: "Please suggest a name based on this photo."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "low"
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7 + (Math.random() * 0.6),
+      frequency_penalty: 0.5,
+      presence_penalty: 0.5
+    };
+    
+    console.log('Request structure:', JSON.stringify(requestBody).substring(0, 200) + '...');
+    
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: prompt
-          },
-          {
-            role: "user", 
-            content: [
-              {
-                type: "text",
-                text: "Please suggest a name based on this photo."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`,
-                  detail: "low"
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7 + (Math.random() * 0.6),
-        frequency_penalty: 0.5,
-        presence_penalty: 0.5
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
