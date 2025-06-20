@@ -66,30 +66,33 @@ export async function onRequest(context) {
             size: file.size
           });
           
-          // File 이나 Blob을 base64로 변환 - 개선된 방법
+          // File 이나 Blob을 base64로 변환 - Cloudflare Workers 환경에 맞는 방법
           if (file && (file instanceof File || file instanceof Blob)) {
             try {
               // 1. 바이너리 데이터 가져오기
               const arrayBuffer = await file.arrayBuffer();
+              const bytes = new Uint8Array(arrayBuffer);
               
-              // 2. Base64 인코딩 - 웹 API 활용
-              const base64WithoutPrefix = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  // data:image/jpeg;base64, 형태의 데이터 URI에서 base64 부분만 추출
-                  const result = reader.result;
-                  const commaIndex = result.indexOf(',');
-                  const base64 = commaIndex >= 0 ? result.substring(commaIndex + 1) : result;
-                  resolve(base64);
-                };
-                reader.readAsDataURL(file);
-              });
+              // 2. Base64 인코딩 - Cloudflare Workers에서 사용 가능한 방법
+              // btoa() 함수가 이진 데이터를 직접 처리할 수 없으므로
+              // 바이트 배열을 문자열로 변환한 후 처리
+              let binary = '';
               
-              // 3. 추출한 base64 저장 (prefix 없이)
-              imageBase64 = base64WithoutPrefix;
-              console.log('Image converted using FileReader, length:', imageBase64?.length || 0);
+              // 대용량 바이트 배열 처리를 위해 청크 크기 분할 처리
+              const CHUNK_SIZE = 100000; // 적절한 청크 크기를 설정
               
-              // 4. 이미지 데이터 처음 20바이트 로깅 (디버깅용)
+              for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+                const chunk = bytes.slice(i, Math.min(i + CHUNK_SIZE, bytes.length));
+                // 각 청크를 문자열로 변환
+                binary += chunk.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+              }
+              
+              // 문자열을 base64로 인코딩
+              imageBase64 = btoa(binary);
+              
+              console.log('Image converted with arrayBuffer, length:', imageBase64?.length || 0);
+              
+              // 이미지 데이터 처음 20바이트 로깅 (디버깅용)
               if (imageBase64 && imageBase64.length > 20) {
                 console.log('First 20 chars of base64:', imageBase64.substring(0, 20));
               }
