@@ -96,7 +96,12 @@ export default function HomePage() {
 
       const data = await response.json();
       console.log('Client received response:', data);
-      setResult(data);  // dataが直接結果オブジェクトである
+      
+      // 結果オブジェクトに選択された画像を追加します
+      setResult({
+        ...data,
+        previewImageUrl: selectedFile ? URL.createObjectURL(selectedFile) : ''
+      });
     } catch (err: any) {
       console.error('Error analyzing image:', err);
       setError(err.message || '問題が発生しました');

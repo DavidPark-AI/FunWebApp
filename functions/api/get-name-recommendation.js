@@ -375,7 +375,7 @@ function getBasePrompt(uiLanguage) {
   const randomSeed = Math.floor(Math.random() * 1000000);
   
   const basePrompts = {
-    en: `You are an advanced name recommendation system that suggests creative, fitting names based on images. Follow this exact process:
+    en: `You are an advanced name recommendation system that suggests creative and fitting names based on an image. Follow these steps precisely:
 
 1. FIRST, get a general impression from the image - focus on the overall mood, colors, setting, and feeling rather than detailed facial analysis.
 
@@ -387,6 +387,9 @@ function getBasePrompt(uiLanguage) {
 Name: [your selected name]
 Pronunciation: [how to pronounce it]
 Reason: [brief explanation why this name matches the image]
+
+IMPORTANT: If the nameLanguage parameter is 'korean', provide the Name, Pronunciation, and Reason in Korean language.
+If the nameLanguage is 'japanese', provide them in Japanese. Otherwise, provide them in English.
 
 Session ID: ${currentTime}-${randomSeed}. Use this to ensure results are different each time.`,
     ko: `당신은 이미지를 보고 창의적이고 어울리는 이름을 추천하는 고급 이름 추천 시스템입니다. 다음 절차를 정확히 따르세요:
@@ -402,6 +405,8 @@ Name: [선택한 이름]
 Pronunciation: [발음 방법]
 Reason: [이 이름이 이미지의 느낌과 어울리는 간략한 설명]
 
+중요: 클라이언트 요청 nameLanguage가 'korean'이면 한국어로, 'japanese'면 일본어로, 'english'면 영어로 응답하세요.
+
 세션 ID: ${currentTime}-${randomSeed}. 매번 다른 결과를 보장하기 위해 이 ID를 활용하세요.`,
     ja: `あなたは、画像に基づいて創造的で適切な名前を提案する先進的な名前推薦システムです。次の手順に正確に従ってください：
 
@@ -412,11 +417,18 @@ Reason: [이 이름이 이미지의 느낌과 어울리는 간략한 설명]
 3. 第三に、あなたの10の名前リストからランダムに1つの名前を選択してください。
 
 4. 最後に、次の形式でのみ回答してください：
-Name: [選択した名前]
+Name: [選んだ名前]
 Pronunciation: [発音方法]
-Reason: [この名前が画像の雰囲気に合う簡単な理由]
+Reason: [この名前が画像の雰囲気に合う理由の簡潔な説明]
 
-セッションID：${currentTime}-${randomSeed}。これを使用して、毎回異なる結果を確実にしてください。`
+重要: クライアントのnameLanguageパラメータが'korean'なら韓国語で、'japanese'なら日本語で、'english'なら英語で応答してください。
+
+セッションID: ${currentTime}-${randomSeed}. 毎回異なる結果を保証するためにこのIDを使用してください。
+
+また、日本語の名前を提案する場合、以下の点に注意してください。
+- 日本語の名前には、漢字、ひらがな、カタカナなどが含まれることがあります。
+- 日本語の名前には、意味や由来があることがあります。
+- 日本語の名前には、文化的な背景や歴史的な背景があることがあります。`
   };
 
   return basePrompts[uiLanguage] || basePrompts.en;

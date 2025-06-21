@@ -95,8 +95,13 @@ export default function HomePage() {
       }
 
       const data = await response.json();
-      console.log('Client received response:', data);  // 응답 수신 로그
-      setResult(data);  // data 자체가 결과객체 (result 프로퍼티 없음)
+      console.log('Client received response:', data);
+      
+      // 응답 객체에 이미지 URL 추가 (현재 선택된 이미지)
+      setResult({
+        ...data,
+        previewImageUrl: selectedFile ? URL.createObjectURL(selectedFile) : ''
+      });
     } catch (err: any) {
       console.error('Error analyzing image:', err);
       setError(err.message || '문제가 발생했습니다');

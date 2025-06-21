@@ -96,7 +96,12 @@ export default function HomePage() {
 
       const data = await response.json();
       console.log('Client received response:', data);
-      setResult(data);  // Using data directly as it's already the result object
+      
+      // Add selected image to the result object
+      setResult({
+        ...data,
+        previewImageUrl: selectedFile ? URL.createObjectURL(selectedFile) : ''
+      });
     } catch (err: any) {
       console.error('Error analyzing image:', err);
       setError(err.message || 'Something went wrong');
