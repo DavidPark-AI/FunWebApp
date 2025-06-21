@@ -197,15 +197,38 @@ export async function onRequest(context) {
       );
     }
     
-    // nameLanguage에 따른 적절한 사용자 메시지 설정
+    // nameLanguage와 uiLanguage를 모두 고려한 사용자 메시지 설정
     let userMessage;
+    
+    // 언어 조합에 따라 적절한 메시지 생성
     if (nameLanguage === 'korean') {
-      userMessage = '이 이미지를 바탕으로 한국어 이름을 추천해주세요. 이름과 이유 모두 반드시 한국어로 작성해주세요.';
+      if (uiLanguage === 'ko') {
+        userMessage = '이 이미지를 바탕으로 한국어 이름을 추천해주세요. 이름과 이유 모두 한국어로 작성해주세요.';
+      } else if (uiLanguage === 'ja') {
+        userMessage = 'この画像に基づいて韓国語の名前を提案してください。名前は韓国語で書き、理由は日本語で書いてください。';
+      } else {
+        userMessage = 'Please suggest a Korean name based on this photo. Write the name in Korean, but write the reason in English.';
+      }
     } else if (nameLanguage === 'japanese') {
-      userMessage = 'この写真に基づいて、日本語の名前を提案してください。名前と理由の両方を必ず日本語で作成してください。';
-    } else {
-      userMessage = 'Please suggest a name based on this photo. Write both the name and reason in English.';
+      if (uiLanguage === 'ko') {
+        userMessage = '이 이미지를 바탕으로 일본어 이름을 추천해주세요. 이름은 일본어로 쓰고, 이유는 한국어로 작성해주세요.';
+      } else if (uiLanguage === 'ja') {
+        userMessage = 'この画像に基づいて日本語の名前を提案してください。名前と理由の両方を日本語で書いてください。';
+      } else {
+        userMessage = 'Please suggest a Japanese name based on this photo. Write the name in Japanese, but write the reason in English.';
+      }
+    } else { // English names
+      if (uiLanguage === 'ko') {
+        userMessage = '이 이미지를 바탕으로 영어 이름을 추천해주세요. 이름은 영어로 쓰고, 이유는 한국어로 작성해주세요.';
+      } else if (uiLanguage === 'ja') {
+        userMessage = 'この画像に基づいて英語の名前を提案してください。名前は英語で書き、理由は日本語で書いてください。';
+      } else {
+        userMessage = 'Please suggest an English name based on this photo. Write both the name and reason in English.';
+      }
     }
+    
+    // 디버깅용 로그
+    console.log('Language settings:', { nameLanguage, uiLanguage, userMessage: userMessage.substring(0, 30) + '...' });
     
     // OpenAI API 호출
     const requestBody = {
@@ -398,8 +421,7 @@ Name: [your selected name]
 Pronunciation: [how to pronounce it]
 Reason: [brief explanation why this name matches the image]
 
-IMPORTANT: If the nameLanguage parameter is 'korean', provide the Name, Pronunciation, and Reason in Korean language.
-If the nameLanguage is 'japanese', provide them in Japanese. Otherwise, provide them in English.
+IMPORTANT: Follow the language instructions in the user message carefully. The name should be in the requested nameLanguage, while the explanation should be in the UI language.
 
 Session ID: ${currentTime}-${randomSeed}. Use this to ensure results are different each time.`,
     ko: `당신은 이미지를 보고 창의적이고 어울리는 이름을 추천하는 고급 이름 추천 시스템입니다. 다음 절차를 정확히 따르세요:
