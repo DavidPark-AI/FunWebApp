@@ -95,7 +95,8 @@ export default function HomePage() {
       }
 
       const data = await response.json();
-      setResult(data.result);
+      console.log('Client received response:', data);
+      setResult(data);  // Using data directly as it's already the result object
     } catch (err: any) {
       console.error('Error analyzing image:', err);
       setError(err.message || 'Something went wrong');
