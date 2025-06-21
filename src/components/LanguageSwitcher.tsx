@@ -8,14 +8,18 @@ export default function LanguageSwitcher() {
   const [currentLocale, setCurrentLocale] = useState<Locale>('en');
 
   useEffect(() => {
-    const locale = pathname.split('/')[1] as Locale;
-    if (i18nConfig.locales.includes(locale)) {
-      setCurrentLocale(locale);
+    if (pathname) {
+      const locale = pathname.split('/')[1] as Locale;
+      if (i18nConfig.locales.includes(locale)) {
+        setCurrentLocale(locale);
+      }
     }
   }, [pathname]);
 
   // Calculate paths with the new locale
   const getNewPath = (locale: Locale) => {
+    if (!pathname) return `/${locale}`;
+    
     const pathParts = pathname.split('/');
     pathParts[1] = locale;
     return pathParts.join('/');
