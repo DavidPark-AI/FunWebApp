@@ -1,11 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { 
-  FacebookShareButton, FacebookIcon, 
-  TwitterShareButton, TwitterIcon,
-  WhatsappShareButton, WhatsappIcon,
-  LineShareButton, LineIcon
-} from 'react-share';
 
 export interface NameResult {
   name: string;
@@ -106,39 +100,29 @@ export default function ResultCard({ result, onTryAgain, appUrl, labels }: Resul
         </button>
       </div>
       
-      <div className="mt-4">
-        <h4 className="text-center text-sm font-medium text-gray-500 mb-2">{labels.share}</h4>
-        <div className="flex justify-center space-x-2">
-          <FacebookShareButton url={appUrl}>
-            <FacebookIcon size={32} round />
-          </FacebookShareButton>
-          <TwitterShareButton url={appUrl}>
-            <TwitterIcon size={32} round />
-          </TwitterShareButton>
-          <WhatsappShareButton url={appUrl}>
-            <WhatsappIcon size={32} round />
-          </WhatsappShareButton>
-          <LineShareButton url={appUrl}>
-            <LineIcon size={32} round />
-          </LineShareButton>
-        </div>
-      </div>
-      
       <div className="mt-6">
         <h4 className="text-center text-sm font-medium text-gray-500 mb-2">{labels.shareApp}</h4>
-        <div className="flex justify-center space-x-2">
-          <FacebookShareButton url={appUrl}>
-            <FacebookIcon size={32} round />
-          </FacebookShareButton>
-          <TwitterShareButton url={appUrl}>
-            <TwitterIcon size={32} round />
-          </TwitterShareButton>
-          <WhatsappShareButton url={appUrl}>
-            <WhatsappIcon size={32} round />
-          </WhatsappShareButton>
-          <LineShareButton url={appUrl}>
-            <LineIcon size={32} round />
-          </LineShareButton>
+        <div className="flex justify-center">
+          <button 
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2"
+            onClick={() => {
+              navigator.clipboard.writeText(appUrl);
+              const button = document.getElementById('copyButton');
+              if (button) {
+                const originalText = button.innerText;
+                button.innerText = '✓ 복사됨';
+                setTimeout(() => {
+                  button.innerText = originalText;
+                }, 2000);
+              }
+            }}
+            id="copyButton"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            URL 복사하기
+          </button>
         </div>
       </div>
     </div>

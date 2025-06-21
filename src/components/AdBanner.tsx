@@ -46,6 +46,9 @@ export default function AdBanner({ adSlot, adFormat = 'rectangle' }: AdBannerPro
 
   return (
     <div ref={adRef} className="ad-container">
+      <div style={{ fontSize: '12px', textAlign: 'center', color: '#888', marginBottom: '4px' }}>
+        Advertisement
+      </div>
       {process.env.NODE_ENV === 'production' ? (
         <ins
           className="adsbygoogle"
@@ -62,6 +65,7 @@ export default function AdBanner({ adSlot, adFormat = 'rectangle' }: AdBannerPro
             height: bgHeight, 
             backgroundColor: '#e0e0e0',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto',
