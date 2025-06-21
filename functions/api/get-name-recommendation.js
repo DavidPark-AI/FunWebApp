@@ -197,6 +197,16 @@ export async function onRequest(context) {
       );
     }
     
+    // nameLanguage에 따른 적절한 사용자 메시지 설정
+    let userMessage;
+    if (nameLanguage === 'korean') {
+      userMessage = '이 이미지를 바탕으로 한국어 이름을 추천해주세요. 이름과 이유 모두 반드시 한국어로 작성해주세요.';
+    } else if (nameLanguage === 'japanese') {
+      userMessage = 'この写真に基づいて、日本語の名前を提案してください。名前と理由の両方を必ず日本語で作成してください。';
+    } else {
+      userMessage = 'Please suggest a name based on this photo. Write both the name and reason in English.';
+    }
+    
     // OpenAI API 호출
     const requestBody = {
       model: "gpt-4o-mini",
@@ -210,7 +220,7 @@ export async function onRequest(context) {
           content: [
             {
               type: "text",
-              text: "Please suggest a name based on this photo."
+              text: userMessage
             },
             {
               type: "image_url",
