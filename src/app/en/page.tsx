@@ -7,6 +7,7 @@ import NameLanguageSelector, { NameLanguage } from '@/components/NameLanguageSel
 import ResultCard, { NameResult } from '@/components/ResultCard';
 import AdBanner from '@/components/AdBanner';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import InfoSidebar from '@/components/InfoSidebar';
 import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
 
 // Language content for English UI
@@ -132,7 +133,7 @@ export default function HomePage() {
       </header>
 
       <main className="max-w-4xl mx-auto">
-        {/* Main content area with side ad */}
+        {/* Main content area with info sidebar */}
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-1">
             {!result && !isAnalyzing && (
@@ -212,12 +213,6 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <p className="mt-4 text-lg font-medium text-gray-700">{translations.analyzing}</p>
-                
-                {showAd && (
-                  <div className="mt-8">
-                    <AdBanner adSlot="analyzing_popup" adFormat="popup" />
-                  </div>
-                )}
               </div>
             )}
 
@@ -231,13 +226,13 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Side advertisement */}
+          {/* Info sidebar (replacing side advertisement) */}
           <div className="md:w-64 flex-shrink-0">
-            <AdBanner adSlot="sidebar" adFormat="rectangle" />
+            <InfoSidebar language="en" />
           </div>
         </div>
         
-        {/* Bottom advertisement */}
+        {/* Bottom advertisement - only one ad shown on the page */}
         <div className="mt-12">
           <AdBanner adSlot="footer" adFormat="leaderboard" />
         </div>
