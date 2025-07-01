@@ -8,6 +8,7 @@ import ResultCard, { NameResult } from '@/components/ResultCard';
 import AdBanner from '@/components/AdBanner';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import InfoSidebar from '@/components/InfoSidebar';
+import ExampleDisplay from '@/components/ExampleDisplay';
 import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
 
 // Language content for English UI
@@ -126,11 +127,21 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen py-8 px-4">
-      <header className="max-w-4xl mx-auto text-center mb-8">
+      <header className="max-w-4xl mx-auto text-center mb-4">
         <h1 className="text-4xl font-bold text-primary-600 mb-2">{translations.title}</h1>
         <p className="text-lg text-gray-600">{translations.subtitle}</p>
         <LanguageSwitcher />
       </header>
+
+      {/* Google Ad Banner placed right below the title */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <AdBanner adSlot="header" adFormat="leaderboard" />
+      </div>
+
+      {/* Example Display Section */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <ExampleDisplay language="en" />
+      </div>
 
       <main className="max-w-4xl mx-auto">
         {/* Main content area with info sidebar */}
@@ -230,11 +241,6 @@ export default function HomePage() {
           <div className="md:w-64 flex-shrink-0">
             <InfoSidebar language="en" />
           </div>
-        </div>
-        
-        {/* Bottom advertisement - only one ad shown on the page */}
-        <div className="mt-12">
-          <AdBanner adSlot="footer" adFormat="leaderboard" />
         </div>
       </main>
 
