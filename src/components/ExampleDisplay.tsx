@@ -13,7 +13,7 @@ const translations = {
     resultTitle: 'Sample Result',
     sampleName: 'Emma',
     samplePronunciation: 'EM-uh',
-    sampleReason: 'A graceful name that complements your gentle smile and warm, friendly features. The name Emma has historical roots meaning "whole" or "universal", which reflects the completeness of your balanced facial features. Your expressive eyes convey intelligence and creativity, while your facial symmetry suggests harmony and confidence – all qualities that the name Emma has come to represent in contemporary culture. Famous Emmas like Emma Watson and Emma Stone share similar approachable yet elegant qualities that your appearance naturally conveys.'
+    sampleReason: 'A graceful name that complements your gentle smile and warm features. The name Emma has roots meaning "whole" or "universal", reflecting your balanced facial features. Your expressive eyes convey intelligence, while your facial symmetry suggests harmony – qualities that the name Emma represents in modern culture. Famous Emmas like Watson and Stone share similar approachable yet elegant qualities.'
   },
   ko: {
     exampleTitle: '이용 방법',
@@ -21,7 +21,7 @@ const translations = {
     resultTitle: '결과 예시',
     sampleName: '지민',
     samplePronunciation: 'Ji-min',
-    sampleReason: '밝은 표정과 부드러운 인상에 어울리는 세련된 이미지의 이름입니다. "지"는 지혜로움을, "민"은 민첩함과 영리함을 의미하여 당신의 지적인 눈빛과 섬세한 이목구비에 완벽하게 어울립니다. 사진에서 보여지는 자연스러운 미소는 친근함을 주면서도 자신감 있는 인상을 주며, 현대적이면서도 전통의 가치를 소중히 여기는 당신의 균형잡힌 이미지가 느껴집니다. 또한 "지민"이라는 이름은 K-pop 스타들 사이에서도 인기 있는 이름으로, 세련되고 국제적인 감각을 지닌 당신의 분위기와 잘 어울립니다.'
+    sampleReason: '밝은 표정과 부드러운 인상에 어울리는 세련된 이름입니다. "지"는 지혜로움을, "민"은 민첩함을 의미하여 지적인 눈빛과 섬세한 이목구비에 잘 어울립니다. 자연스러운 미소는 친근함과 자신감을 주며, "지민"은 K-pop 스타들 사이에서도 인기 있는 이름으로 세련되고 국제적인 감각을 지닌 분위기와 잘 어울립니다.'
   },
   ja: {
     exampleTitle: '使い方',
@@ -29,7 +29,7 @@ const translations = {
     resultTitle: '結果サンプル',
     sampleName: '咲良',
     samplePronunciation: 'Sakura (サクラ)',
-    sampleReason: '優しい笑顔と温かみのある印象に合った、品のある美しい名前です。"咲"は花が開くという意味で、あなたの明るく開放的な印象を表し、"良"は優れた、美しいという意味で、あなたの洗練された雰囲気と調和します。桜の花のように、繊細さと強さを兼ね備えたイメージを持ち、あなたの晴れやかな表情と知性的な雰囲気が、この伝統的でいても現代的な名前に完璧に反映されています。また、日本の文化で桜は新しい始まりと美の象徴とされており、あなたの前向きで明るい性格特性を素晴らしく表現しています。'
+    sampleReason: '優しい笑顔と温かみのある印象に合った、品のある美しい名前です。"咲"は花が開くという意味で明るい印象を表し、"良"は優れた、美しいという意味であなたの雰囲気と調和します。桜の花のように繊細さと強さを兼ね備え、あなたの表情と知性的な雰囲気がこの名前に反映されています。日本文化で桜は新しい始まりの象徴で、あなたの明るい性格を表現しています。'
   }
 };
 
@@ -61,10 +61,10 @@ export default function ExampleDisplay({ language }: ExampleDisplayProps) {
         {/* Right side - Example result */}
         <div className="md:w-1/2 p-4 bg-gray-50">
           <h4 className="text-md font-medium text-gray-800">{content.resultTitle}</h4>
-          <div className="mt-2 p-3 bg-white rounded border">
+          <div className="mt-2 p-3 bg-white rounded border h-[190px] overflow-hidden">
             <h5 className="text-xl font-semibold text-primary-600">{content.sampleName}</h5>
             <p className="text-sm text-gray-500">{content.samplePronunciation}</p>
-            <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-gray-100 max-h-[115px] overflow-y-auto pr-2 custom-scrollbar">
               <p className="text-sm text-gray-700">{content.sampleReason}</p>
             </div>
           </div>
