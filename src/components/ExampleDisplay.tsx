@@ -47,7 +47,7 @@ export default function ExampleDisplay({ language }: ExampleDisplayProps) {
         {/* Left side - Example image */}
         <div className="md:w-1/2 relative h-60">
           <Image 
-            src="/examples/example-result.jpg" 
+            src="/examples/example-result.JPG" 
             alt="Example photo" 
             fill
             style={{ objectFit: 'cover' }}
