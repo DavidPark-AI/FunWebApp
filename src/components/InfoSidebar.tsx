@@ -127,7 +127,7 @@ export default function InfoSidebar({ language }: InfoSidebarProps) {
   const content = translations[language] || translations.en;
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+    <div className="bg-yellow-50 rounded-lg shadow-sm p-4 border border-yellow-100">
       {/* About Section */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-primary-600 mb-2">{content.about}</h3>

@@ -37,7 +37,7 @@ export default function ExampleDisplay({ language }: ExampleDisplayProps) {
   const content = translations[language] || translations.en;
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-orange-50 rounded-lg shadow-sm border border-orange-100 overflow-hidden">
       <div className="p-4">
         <h3 className="text-lg font-semibold text-primary-600 mb-2">{content.exampleTitle}</h3>
         <p className="text-sm text-gray-700 mb-3">{content.exampleDescription}</p>
@@ -59,9 +59,9 @@ export default function ExampleDisplay({ language }: ExampleDisplayProps) {
         </div>
         
         {/* Right side - Example result */}
-        <div className="md:w-1/2 p-4 bg-gray-50">
+        <div className="md:w-1/2 p-4 bg-orange-50">
           <h4 className="text-md font-medium text-gray-800">{content.resultTitle}</h4>
-          <div className="mt-2 p-3 bg-white rounded border h-[190px] overflow-hidden">
+          <div className="mt-2 p-3 bg-pink-100 rounded border border-pink-200 h-[190px] overflow-hidden">
             <h5 className="text-xl font-semibold text-primary-600">{content.sampleName}</h5>
             <p className="text-sm text-gray-500">{content.samplePronunciation}</p>
             <div className="mt-3 pt-3 border-t border-gray-100 max-h-[115px] overflow-y-auto pr-2 custom-scrollbar">

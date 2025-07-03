@@ -48,7 +48,7 @@ export default function ResultCard({ result, onTryAgain, appUrl, labels }: Resul
 
   return (
     <div className="w-full max-w-md mx-auto my-4">
-      <div ref={cardRef} className="bg-white rounded-lg shadow-lg p-6 relative overflow-hidden">
+      <div ref={cardRef} className="bg-pink-100 rounded-lg shadow-lg p-6 relative overflow-hidden border border-pink-200">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-300 via-primary-500 to-primary-700"></div>
         
         {/* Preview image */}

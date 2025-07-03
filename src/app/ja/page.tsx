@@ -127,7 +127,7 @@ export default function HomePage() {
   const appUrl = typeof window !== 'undefined' ? window.location.origin + '/ja' : 'https://name-recommender.app/ja';
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 bg-pink-50">
       <header className="max-w-4xl mx-auto text-center mb-4">
         <h1 className="inline-block text-4xl font-bold text-primary-600 mb-4 px-6 py-2 border-2 border-primary-600 rounded-lg shadow-md bg-white">{translations.title}</h1>
         <p className="text-lg text-gray-600 whitespace-pre-line">{translations.subtitle}</p>
