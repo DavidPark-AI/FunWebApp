@@ -6,10 +6,10 @@ import Footer from '@/components/Footer';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 bg-pink-50">
       <PageHeader title="プライバシーポリシー" />
 
-      <main className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <main className="max-w-2xl mx-auto bg-yellow-50 p-8 rounded-lg shadow-md border border-yellow-100">
         <div className="prose">
           <p className="text-sm text-gray-500 mb-4">最終更新日: 2025年7月3日</p>
           

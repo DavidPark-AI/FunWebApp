@@ -6,10 +6,10 @@ import Footer from '@/components/Footer';
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 bg-pink-50">
       <PageHeader title="お問い合わせ" />
 
-      <main className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <main className="max-w-2xl mx-auto bg-yellow-50 p-8 rounded-lg shadow-md border border-yellow-100">
         <div className="prose">
           <p className="mb-4">
             名前レコメンダーアプリに関心をお持ちいただき、ありがとうございます。ご質問、ご懸念、またはフィードバックがございましたら、

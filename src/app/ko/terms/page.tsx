@@ -6,10 +6,10 @@ import Footer from '@/components/Footer';
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 bg-pink-50">
       <PageHeader title="서비스 이용약관" />
 
-      <main className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <main className="max-w-2xl mx-auto bg-yellow-50 p-8 rounded-lg shadow-md border border-yellow-100">
         <div className="prose">
           <p className="text-sm text-gray-500 mb-4">최종 업데이트: 2025년 7월 3일</p>
           
