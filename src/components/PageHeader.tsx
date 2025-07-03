@@ -38,14 +38,14 @@ export default function PageHeader({ title }: PageHeaderProps) {
       <div className="flex justify-between items-center mb-4">
         <Link 
           href={homePath} 
-          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors font-medium shadow-sm"
+          className="px-4 py-2 bg-pink-300 text-pink-900 rounded-md hover:bg-pink-400 transition-colors font-medium shadow-sm border border-pink-200"
         >
           {buttonText}
         </Link>
         
         <LanguageSwitcher />
       </div>
-      <h1 className="text-4xl font-bold text-primary-600">{title}</h1>
+      <h1 className="inline-block text-4xl font-bold text-primary-600 bg-pink-100 px-6 py-3 rounded-lg shadow-sm border border-pink-200">{title}</h1>
     </header>
   );
 }
