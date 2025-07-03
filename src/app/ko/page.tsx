@@ -10,11 +10,12 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import InfoSidebar from '@/components/InfoSidebar';
 import ExampleDisplay from '@/components/ExampleDisplay';
 import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
+import Footer from '@/components/Footer';
 
 // Language content for Korean UI
 const translations = {
   title: '나의 이름은?',
-  subtitle: '사진을 기반으로 이름을 추천해 드립니다',
+  subtitle: '🤔내 이름이 내 얼굴에 어울릴까?\n당신의 얼굴에 어울리는 이름은 사실...🫢',
   uploadTitle: '사진 업로드',
   uploadInstructions: '사진을 끌어다 놓거나 클릭하여 업로드하세요 (최대 5MB)',
   languageSelect: '이름 언어 선택',
@@ -128,8 +129,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <header className="max-w-4xl mx-auto text-center mb-4">
-        <h1 className="text-4xl font-bold text-primary-600 mb-2">{translations.title}</h1>
-        <p className="text-lg text-gray-600">{translations.subtitle}</p>
+        <h1 className="inline-block text-4xl font-bold text-primary-600 mb-4 px-6 py-2 border-2 border-primary-600 rounded-lg shadow-md bg-white">{translations.title}</h1>
+        <p className="text-lg text-gray-600 whitespace-pre-line">{translations.subtitle}</p>
         <LanguageSwitcher />
       </header>
 
@@ -244,10 +245,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      <footer className="max-w-4xl mx-auto mt-12 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} 이름 추천기</p>
-        <p className="mt-1">OpenAI 기술 제공</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
