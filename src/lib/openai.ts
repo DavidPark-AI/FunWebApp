@@ -76,8 +76,15 @@ export async function getNameSuggestion(
           console.log('Worker API response status:', response.status);
           // 바로 response.json()을 사용하여 파싱 (fetch API 기본 기능 활용)
           const result = await response.json();
+          
           // 성공적으로 분석이 완료되었을 때 카운터 증가
-          incrementAnalysisCount();
+          console.log('📊 클라우드플레어 API 성공: 카운터 증가 시도');
+          try {
+            incrementAnalysisCount();
+            console.log('✅ 카운터 증가 성공');
+          } catch (countError) {
+            console.error('❌ 카운터 증가 중 오류:', countError);
+          }
           return result;
         } catch (error) {
           console.error('Worker API response error:', error);
@@ -154,7 +161,13 @@ async function makeDirectAPICall(
       
       // 성공적으로 분석이 완료되었을 때만 카운터 증가
       if (typeof window !== 'undefined') {
-        incrementAnalysisCount();
+        console.log('📊 직접 API 호출 성공: 카운터 증가 시도');
+        try {
+          incrementAnalysisCount();
+          console.log('✅ 직접 API 호출: 카운터 증가 성공');
+        } catch (countError) {
+          console.error('❌ 직접 API 호출: 카운터 증가 중 오류:', countError);
+        }
       }
       return parseResponse(response, nameLanguage, uiLanguage);
     } 

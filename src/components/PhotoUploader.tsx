@@ -18,6 +18,8 @@ interface PhotoUploaderProps {
     button: string;
   };
   maxSizeInBytes?: number;
+  // 초기화 트리거 (새 이미지 업로드 또는 초기화 버튼 클릭 시 처리를 위한 플래그)
+  resetTrigger?: number;
 }
 
 // Function to resize an image file
@@ -85,7 +87,7 @@ const resizeImage = (file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.
   });
 };
 
-export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5 * 1024 * 1024 }: PhotoUploaderProps) {
+export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5 * 1024 * 1024, resetTrigger = 0 }: PhotoUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -93,22 +95,39 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
 
   // 컴포넌트 마운트 시 저장된 이미지 미리보기 로드 및 브라우저 기능 확인
   useEffect(() => {
-    const savedPreview = getImagePreviewUrl();
-    if (savedPreview) {
-      setPreview(savedPreview);
+    // 브라우저 기능 확인 (한 번만 확인하면 충분)
+    if (browserCanResize === null) {
+      setBrowserCanResize(canResizeImages());
     }
     
-    // Check if browser can resize images
-    setBrowserCanResize(canResizeImages());
-  }, []);
+    // resetTrigger가 변경되었고 그 값이 0보다 큰 경우 (초기화 버튼 클릭 시)
+    if (resetTrigger > 0) {
+      console.log('포토 업로더: 초기화 트리거 받음', resetTrigger);
+      setPreview(null);
+      setError(null);
+      setWarning(null);
+      return;
+    }
+    
+    // 초기 로드 또는 새로 고침 시 저장된 미리보기 로드
+    const savedPreview = getImagePreviewUrl();
+    if (savedPreview) {
+      console.log('포토 업로더: 저장된 미리보기 이미지 로드');
+      setPreview(savedPreview);
+    }
+  }, [resetTrigger]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setError(null);
     setWarning(null);
     const file = acceptedFiles[0];
     
-    if (!file) return;
+    if (!file) {
+      console.log('파일 업로드: 파일이 없습니다');
+      return;
+    }
     
+    console.log('파일 업로드 시작:', file.name, file.size);
     let finalFile = file;
     
     // Handle large files
@@ -117,6 +136,7 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
       if (browserCanResize) {
         try {
           setWarning(`File size exceeds ${maxSizeInBytes / 1024 / 1024}MB limit. Attempting to resize...`);
+          console.log('파일 사이즈 제한 초과, 자동 리사이징 시도');
           
           // Try resizing the image
           finalFile = await resizeImage(file);
@@ -124,10 +144,12 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
           if (finalFile.size > maxSizeInBytes) {
             // If still too large after resizing
             setError(`File is still too large after resizing (${(finalFile.size / 1024 / 1024).toFixed(2)}MB). Please use a smaller image.`);
+            console.log('리사이징 후에도 사이즈가 커서 실패');
             return;
           }
           
           setWarning(`Image resized successfully from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(finalFile.size / 1024 / 1024).toFixed(2)}MB`);
+          console.log('리사이징 성공:', file.size, '->', finalFile.size);
         } catch (err) {
           console.error('Error resizing image:', err);
           setError(`File size exceeds ${maxSizeInBytes / 1024 / 1024}MB limit and automatic resizing failed. Please use a smaller image.`);
@@ -140,19 +162,34 @@ export default function PhotoUploader({ onUpload, uploadText, maxSizeInBytes = 5
       }
     }
 
-    // Create a preview
-    const objectUrl = URL.createObjectURL(finalFile);
-    setPreview(objectUrl);
-    
-    // Save the preview URL to storage for persistent access across language changes
-    saveImagePreviewUrl(objectUrl);
-    
-    // Pass the file to the parent component
-    onUpload(finalFile);
+    try {
+      // Create a preview
+      const objectUrl = URL.createObjectURL(finalFile);
+      console.log('미리보기 URL 생성:', objectUrl.substring(0, 30) + '...');
+      
+      // 미리보기를 state에 설정
+      setPreview(objectUrl);
+      
+      // 스토리지에 미리보기 저장
+      saveImagePreviewUrl(objectUrl);
+      
+      // 부모 컴포넌트에 파일 전달
+      onUpload(finalFile);
+      
+      console.log('파일 업로드 완료:', file.name, '미리보기 설정 완료');
+    } catch (err) {
+      console.error('미리보기 생성 오류:', err);
+      setError('이미지 미리보기 생성 시 오류가 발생했습니다.');
+    }
 
-    // Clean up the preview when component unmounts
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [maxSizeInBytes, onUpload, browserCanResize]);
+    // Clean up function for when component unmounts
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+        console.log('미리보기 URL 해제');
+      }
+    };
+  }, [maxSizeInBytes, onUpload, browserCanResize, preview]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop, 

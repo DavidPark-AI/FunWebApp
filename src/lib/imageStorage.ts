@@ -84,36 +84,25 @@ export function getImageFromLocalStorage(): File | null {
     
     const imageData = JSON.parse(data);
     
-    // 이미지 저장 시간 검사: 24시간 이상 지난 이미지는 사용하지 않음
-    const currentTime = new Date().getTime();
-    const imageTime = imageData.timestamp || 0;
-    const hoursDiff = (currentTime - imageTime) / (1000 * 60 * 60);
+    // 이미지 데이터가 유효한지 확인
+    if (!imageData || !imageData.base64) return null;
     
-    // 24시간 이상 지난 이미지는 삭제
-    if (hoursDiff > 24) {
-      clearImageFromLocalStorage();
-      return null;
+    // base64 문자열을 파싱
+    const base64Parts = imageData.base64.split(',');
+    if (base64Parts.length < 2) return null;
+    
+    const mime = base64Parts[0].match(/:(.*?);/)?.[1];
+    const bstr = atob(base64Parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
     }
     
-    // base64 문자열을 Blob으로 변환
-    const byteString = atob(imageData.base64.split(',')[1]);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    
-    const blob = new Blob([ab], { type: imageData.type });
-    
-    // Blob에서 File 객체 생성
-    return new File([blob], imageData.name, {
-      type: imageData.type,
-      lastModified: imageData.lastModified
-    });
+    return new File([u8arr], imageData.name || 'restored-image.jpg', { type: mime || imageData.type || 'image/jpeg' });
   } catch (error) {
-    console.error('Failed to get image from storage:', error);
-    clearImageFromLocalStorage(); // 오류 발생 시 스토리지 내용 삭제
+    console.error('이미지 복원 중 오류:', error);
     return null;
   }
 }
@@ -133,15 +122,19 @@ export function getImagePreviewUrl(): string | null {
 }
 
 /**
- * 저장된 이미지 제거
+ * 저장된 이미지와 미리보기 URL 제거
  */
 export function clearImageFromLocalStorage(): void {
   try {
-    // 세션 스토리지에서만 이미지 데이터 제거
+    // 이미지 데이터 제거
     sessionStorage.removeItem(IMAGE_STORAGE_KEY);
+    
+    // 이미지 미리보기 URL 제거
     sessionStorage.removeItem(IMAGE_PREVIEW_KEY);
+    
+    console.log('이미지 및 미리보기 제거 완료');
   } catch (error) {
-    console.error('Failed to clear image from storage:', error);
+    console.error('이미지 및 미리보기 제거 중 오류:', error);
   }
 }
 

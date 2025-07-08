@@ -10,6 +10,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import SideMenu from '@/components/SideMenu';
 import ExampleDisplay from '@/components/ExampleDisplay';
 import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
+import { saveImageAnalyzedState, getImageAnalyzedState, saveAnalysisResult, getAnalysisResult, clearAnalysisData } from '@/lib/analysisStorage';
 import Footer from '@/components/Footer';
 import UserCounter from '@/components/UserCounter';
 
@@ -48,32 +49,64 @@ export default function HomePage() {
   const [showAd, setShowAd] = useState(false);
   const [result, setResult] = useState<NameResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isImageAnalyzed, setIsImageAnalyzed] = useState<boolean>(false);
+  const [currentImageId, setCurrentImageId] = useState<string>('');  // 이미지 고유 ID
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   const handleFileUpload = useCallback((file: File) => {
     // 기존 데이터를 완전히 초기화
-    setSelectedFile(file);
+    setCurrentImageId(Date.now().toString()); // 새 이미지 ID 생성
     setResult(null);
     setError(null);
-    setIsAnalyzing(false);
-    setShowAd(false);
+    setSelectedFile(file);
+    setIsImageAnalyzed(false); // 업로드된 새 파일은 분석되지 않은 상태
     
     // 새 이미지 저장 전에 기존 저장된 데이터를 제거
     clearImageFromLocalStorage();
     
     // 새 이미지 저장
     saveImageToLocalStorage(file);
+    // 새 이미지 업로드시 resetTrigger 증가 제거 - 이미지가 UI에 보여야 함
   }, []);
 
-  // 컴포넌트 마운트 시 로컬 스토리지에서 이미지 로드
+  // 컴포넌트 마운트 시 세션 스토리지에서 이미지와 분석 상태 로드
   useEffect(() => {
     const savedImage = getImageFromLocalStorage();
+    const savedAnalyzed = getImageAnalyzedState();
+    const savedResult = getAnalysisResult();
+    
+    console.log('페이지 로드 시 상태:', { 
+      savedImage: !!savedImage, 
+      savedAnalyzed,
+      savedResult: !!savedResult 
+    });
+    
     if (savedImage) {
       setSelectedFile(savedImage);
+      setIsImageAnalyzed(savedAnalyzed); // 저장된 분석 상태 적용
+      
+      // 저장된 분석 결과가 있다면 복원
+      if (savedAnalyzed && savedResult) {
+        const resultWithPreview = {
+          ...savedResult,
+          previewImageUrl: URL.createObjectURL(savedImage)
+        };
+        setResult(resultWithPreview);
+      } else {
+        setResult(null);
+      }
+    } else {
+      // 이미지가 없으면 모든 상태 초기화
+      setSelectedFile(null);
+      setIsImageAnalyzed(false);
+      setResult(null);
+      setError(null);
+      clearAnalysisData(); // 분석 데이터도 삭제
     }
   }, []);
 
   const handleAnalyze = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || isImageAnalyzed) return;
 
     setIsAnalyzing(true);
     setShowAd(true);
@@ -102,10 +135,22 @@ export default function HomePage() {
       console.log('Client received response:', data);
       
       // 응답 객체에 이미지 URL 추가 (현재 선택된 이미지)
-      setResult({
+      const resultWithPreview = {
         ...data,
         previewImageUrl: selectedFile ? URL.createObjectURL(selectedFile) : ''
-      });
+      };
+      
+      setResult(resultWithPreview);
+      
+      // 이미지 분석 완료를 표시
+      setIsImageAnalyzed(true);
+      
+      // 분석 상태와 결과를 저장 (새로고침 대비)
+      saveImageAnalyzedState(true);
+      saveAnalysisResult(data);
+      
+      console.log('분석 완료 및 상태 저장');
+      
     } catch (err: any) {
       console.error('Error analyzing image:', err);
       setError(err.message || '문제가 발생했습니다');
@@ -116,12 +161,20 @@ export default function HomePage() {
   };
 
   const handleReset = () => {
-    // 결과만 초기화하고 이미지는 유지
+    // 결과와 이미지 상태를 모두 초기화
     setResult(null);
     setError(null);
+    setIsImageAnalyzed(false); // 분석 상태 초기화
+    setSelectedFile(null); // 이미지도 초기화
     
-    // 이미지는 유지하면서 새 추천을 위해 준비
-    // 이미지를 완전히 삭제하지는 않음 (clearImageFromLocalStorage 사용하지 않음)
+    // 이미지와 분석 관련 저장 데이터 모두 제거
+    clearImageFromLocalStorage();
+    clearAnalysisData();
+    
+    // 이미지 컴포넌트 초기화 트리거 증가
+    setResetTrigger(prev => prev + 1);
+    
+    console.log('분석 상태 및 이미지 초기화');
   };
 
   // Determine the app URL for sharing
@@ -154,13 +207,14 @@ export default function HomePage() {
         <div className="w-full">
             {!result && !isAnalyzing && (
               <>
-                <PhotoUploader
+                <PhotoUploader 
                   onUpload={handleFileUpload}
                   uploadText={{
                     title: translations.uploadTitle,
                     instructions: translations.uploadInstructions,
                     button: translations.analyze,
                   }}
+                  resetTrigger={resetTrigger}
                   maxSizeInBytes={5 * 1024 * 1024} // 5MB
                 />
 
@@ -191,14 +245,17 @@ export default function HomePage() {
                     </div>
                   </div>
                   
-                  {selectedFile && (
+                  <div className="mt-4">
                     <button
                       onClick={handleAnalyze}
-                      className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-semibold"
+                      disabled={!selectedFile || isImageAnalyzed || isAnalyzing}
+                      className={`px-6 py-3 ${!selectedFile || isImageAnalyzed || isAnalyzing ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600'} text-white rounded-lg transition-colors font-semibold`}
                     >
-                      {translations.analyze}
+                      {!selectedFile ? '사진을 업로드해주세요' : 
+                       isImageAnalyzed ? '분석 완료 (새 사진 업로드 필요)' : 
+                       translations.analyze}
                     </button>
-                  )}
+                  </div>
                 </div>
 
                 {error && (
