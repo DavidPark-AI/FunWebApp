@@ -7,10 +7,11 @@ import NameLanguageSelector, { NameLanguage } from '@/components/NameLanguageSel
 import ResultCard, { NameResult } from '@/components/ResultCard';
 import AdBanner from '@/components/AdBanner';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import InfoSidebar from '@/components/InfoSidebar';
+import SideMenu from '@/components/SideMenu';
 import ExampleDisplay from '@/components/ExampleDisplay';
 import { saveImageToLocalStorage, getImageFromLocalStorage, clearImageFromLocalStorage } from '@/lib/imageStorage';
 import Footer from '@/components/Footer';
+import UserCounter from '@/components/UserCounter';
 
 // Language content for Korean UI
 const translations = {
@@ -128,6 +129,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen py-8 px-4 bg-pink-50">
+      <div className="max-w-md mx-auto">
       <header className="max-w-4xl mx-auto text-center mb-4">
         <h1 className="inline-block text-4xl font-bold text-primary-600 mb-4 px-6 py-2 border-2 border-primary-600 rounded-lg shadow-md bg-white">{translations.title}</h1>
         <p className="text-lg text-gray-600 whitespace-pre-line">{translations.subtitle}</p>
@@ -145,9 +147,11 @@ export default function HomePage() {
       </div>
 
       <main className="max-w-4xl mx-auto">
-        {/* Main content area with info sidebar */}
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1">
+        {/* 햄버거 메뉴 컴포넌트 */}
+        <SideMenu language="ko" />
+        
+        {/* Main content area */}
+        <div className="w-full">
             {!result && !isAnalyzing && (
               <>
                 <PhotoUploader
@@ -237,15 +241,11 @@ export default function HomePage() {
               />
             )}
           </div>
-
-          {/* Info sidebar (replacing side advertisement) */}
-          <div className="md:w-64 flex-shrink-0">
-            <InfoSidebar language="ko" />
-          </div>
-        </div>
       </main>
 
+      <UserCounter language="ko" />
       <Footer />
+      </div>
     </div>
   );
 }
