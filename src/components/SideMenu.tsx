@@ -102,10 +102,10 @@ export default function SideMenu({ language }: SideMenuProps) {
 
   return (
     <>
-      {/* 햄버거 메뉴 버튼 - 좀 더 중앙으로 이동 */}
+      {/* 햄버거 메뉴 버튼 - 모바일에서는 왼쪽 상단, PC에서는 현재 위치 유지 */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-1/2 transform -translate-x-1/2 md:left-[40%] md:-translate-x-1/2 z-40 p-2 rounded-md bg-pink-300 shadow-md hover:bg-pink-400 transition-colors border border-pink-200"
+        className="fixed top-4 left-4 md:left-[40%] md:-translate-x-1/2 z-40 p-2 rounded-md bg-pink-300 shadow-md hover:bg-pink-400 transition-colors border border-pink-200"
         aria-label="메뉴 열기"
       >
         <svg 

@@ -37,10 +37,14 @@ export function incrementAnalysisCount(): void {
   // 로컬 스토리지 업데이트
   localStorage.setItem('analysisCount', newCount.toString());
   
-  // 사용자 정의 이벤트 발생
-  const updateEvent = new CustomEvent('analysisCountUpdated', { detail: { count: newCount } });
-  console.log('이벤트 발생: analysisCountUpdated', { count: newCount });
-  window.dispatchEvent(updateEvent);
+  // 사용자 정의 이벤트 발생 (즉시)
+  try {
+    const updateEvent = new CustomEvent('analysisCountUpdated', { detail: { count: newCount } });
+    console.log('이벤트 발생: analysisCountUpdated', { count: newCount });
+    window.dispatchEvent(updateEvent);
+  } catch (error) {
+    console.error('분석 카운트 이벤트 발생 중 오류:', error);
+  }
 }
 
 export default function UserCounter({ language }: UserCounterProps) {
@@ -48,9 +52,10 @@ export default function UserCounter({ language }: UserCounterProps) {
   const content = translations[language] || translations.en;
 
   useEffect(() => {
-    // 실제 분석 카운트만 가져오기
-    const analysisCount = getAnalysisCount();
-    setUserCount(analysisCount);
+    // 컴포넌트 마운트 시 초기값 설정
+    const initialCount = getAnalysisCount();
+    console.log('초기 분석 카운트 로드:', initialCount);
+    setUserCount(initialCount);
     
     // 실시간 업데이트를 위한 사용자 정의 이벤트 리스너 추가
     const handleAnalysisCountUpdated = (event: Event) => {
@@ -68,10 +73,12 @@ export default function UserCounter({ language }: UserCounterProps) {
     };
     
     // 저장소에서 직접 읽기 (다른 탭에서 변경 시)
-    const handleStorageChange = () => {
-      const newCount = getAnalysisCount();
-      console.log('storage 이벤트: 카운터 업데이트', userCount, '->', newCount);
-      setUserCount(newCount);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'analysisCount') {
+        const newCount = getAnalysisCount();
+        console.log('storage 이벤트: 카운터 업데이트', userCount, '->', newCount);
+        setUserCount(newCount);
+      }
     };
     
     // 두 이벤트 모두 등록 (현재 탭에서는 사용자 정의 이벤트, 다른 탭에서는 storage 이벤트)
@@ -82,7 +89,7 @@ export default function UserCounter({ language }: UserCounterProps) {
       window.removeEventListener('analysisCountUpdated', handleAnalysisCountUpdated);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [userCount]);
 
   return (
     <div className="mt-8 mb-8 text-center">
