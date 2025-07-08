@@ -25,11 +25,22 @@ function getAnalysisCount(): number {
   return count ? parseInt(count, 10) : 0;
 }
 
-// 로컬 스토리지에 분석 카운트를 저장하는 함수
+// 분석 카운트를 저장하고 클라이언트에 통지하는 함수
 export function incrementAnalysisCount(): void {
   if (typeof window === 'undefined') return;
+  
   const currentCount = getAnalysisCount();
-  localStorage.setItem('analysisCount', (currentCount + 1).toString());
+  const newCount = currentCount + 1;
+  
+  console.log('현재 카운트:', currentCount, '->', newCount);
+  
+  // 로컬 스토리지 업데이트
+  localStorage.setItem('analysisCount', newCount.toString());
+  
+  // 사용자 정의 이벤트 발생
+  const updateEvent = new CustomEvent('analysisCountUpdated', { detail: { count: newCount } });
+  console.log('이벤트 발생: analysisCountUpdated', { count: newCount });
+  window.dispatchEvent(updateEvent);
 }
 
 export default function UserCounter({ language }: UserCounterProps) {
@@ -41,13 +52,34 @@ export default function UserCounter({ language }: UserCounterProps) {
     const analysisCount = getAnalysisCount();
     setUserCount(analysisCount);
     
-    // 실시간 업데이트를 위한 storage 이벤트 리스너 추가
-    const handleStorageChange = () => {
-      setUserCount(getAnalysisCount());
+    // 실시간 업데이트를 위한 사용자 정의 이벤트 리스너 추가
+    const handleAnalysisCountUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('이벤트 수신: analysisCountUpdated', customEvent.detail);
+      
+      if (customEvent.detail && typeof customEvent.detail.count === 'number') {
+        console.log('카운터 업데이트:', userCount, '->', customEvent.detail.count);
+        setUserCount(customEvent.detail.count);
+      } else {
+        const newCount = getAnalysisCount();
+        console.log('카운터 업데이트 (localStorage에서 가져옴):', userCount, '->', newCount);
+        setUserCount(newCount);
+      }
     };
     
+    // 저장소에서 직접 읽기 (다른 탭에서 변경 시)
+    const handleStorageChange = () => {
+      const newCount = getAnalysisCount();
+      console.log('storage 이벤트: 카운터 업데이트', userCount, '->', newCount);
+      setUserCount(newCount);
+    };
+    
+    // 두 이벤트 모두 등록 (현재 탭에서는 사용자 정의 이벤트, 다른 탭에서는 storage 이벤트)
+    window.addEventListener('analysisCountUpdated', handleAnalysisCountUpdated);
     window.addEventListener('storage', handleStorageChange);
+    
     return () => {
+      window.removeEventListener('analysisCountUpdated', handleAnalysisCountUpdated);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
