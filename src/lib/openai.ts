@@ -26,6 +26,9 @@ const getOpenAIClient = () => {
   });
 };
 
+// UserCounter 컴포넌트에서 카운터 증가 함수 가져오기
+import { incrementAnalysisCount } from '@/components/UserCounter';
+
 // Cloudflare Pages 정적 사이트에서 사용할 OpenAI API 호출 함수
 export async function getNameSuggestion(
   imageBase64: string, 
@@ -72,7 +75,10 @@ export async function getNameSuggestion(
         try {
           console.log('Worker API response status:', response.status);
           // 바로 response.json()을 사용하여 파싱 (fetch API 기본 기능 활용)
-          return await response.json();
+          const result = await response.json();
+          // 성공적으로 분석이 완료되었을 때 카운터 증가
+          incrementAnalysisCount();
+          return result;
         } catch (error) {
           console.error('Worker API response error:', error);
           // 지원용 디버깅 정보 수집
@@ -146,6 +152,10 @@ async function makeDirectAPICall(
         presence_penalty: 0.5
       });
       
+      // 성공적으로 분석이 완료되었을 때만 카운터 증가
+      if (typeof window !== 'undefined') {
+        incrementAnalysisCount();
+      }
       return parseResponse(response, nameLanguage, uiLanguage);
     } 
     // 클라이언트 사이드에서는 CORS 문제로 직접 호출이 불가능할 수 있음

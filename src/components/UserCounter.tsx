@@ -18,21 +18,38 @@ const translations = {
   }
 };
 
+// 로컬 스토리지에서 분석 카운트를 가져오는 함수
+function getAnalysisCount(): number {
+  if (typeof window === 'undefined') return 0;
+  const count = localStorage.getItem('analysisCount');
+  return count ? parseInt(count, 10) : 0;
+}
+
+// 로컬 스토리지에 분석 카운트를 저장하는 함수
+export function incrementAnalysisCount(): void {
+  if (typeof window === 'undefined') return;
+  const currentCount = getAnalysisCount();
+  localStorage.setItem('analysisCount', (currentCount + 1).toString());
+}
+
 export default function UserCounter({ language }: UserCounterProps) {
   const [userCount, setUserCount] = useState<number>(0);
   const content = translations[language] || translations.en;
 
   useEffect(() => {
-    // 로컬 스토리지에서 사용자 카운트 불러오기
-    const storedCount = localStorage.getItem('appUserCount');
-    const count = storedCount ? parseInt(storedCount, 10) : 0;
+    // 실제 분석 카운트만 가져오기
+    const analysisCount = getAnalysisCount();
+    setUserCount(analysisCount);
     
-    // 현재 사용자를 카운트에 추가하고 저장
-    const newCount = count + 1;
-    localStorage.setItem('appUserCount', newCount.toString());
+    // 실시간 업데이트를 위한 storage 이벤트 리스너 추가
+    const handleStorageChange = () => {
+      setUserCount(getAnalysisCount());
+    };
     
-    // 초기 카운트 설정 (실제로는 API에서 가져와야 함)
-    setUserCount(Math.max(3968379, newCount)); // 최소 초기값 + 증가된 카운트
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return (
